@@ -61,7 +61,9 @@ namespace Predictive {
     void resize(int);
     // Resize and set values
     void resize(int, T);
-    
+    // Reset
+    void reset();
+
     // Data access
     T& at(int);
     T  at(int) const;
@@ -72,7 +74,8 @@ namespace Predictive {
     T* getPtr() { return data; }
 
     // Accessors
-    int size() { return _size; }
+    int size()   const { return _size; }
+    bool empty() const { return _size==0; }
 
     // *** Mutators
     void setAlignment(int);

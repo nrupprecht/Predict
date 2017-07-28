@@ -5,13 +5,13 @@ ICC = icpc
 GCSTD = -std=c++11
 ICSTD = -std=c++14
 # Optimization for gcc and intel
-ICCOPTFLAGS = $(ICSTD) -xHost -O3 -no-prec-div -static -fp-model fast=2 -restrict -funroll-loops -no-inline-max-size
-GCCOPTFLAGS = $(GCSTD) -O3 -static -funroll-loops -ffast-math -ffinite-math-only -freciprocal-math -ftree-vectorize -flto
+ICCOPTFLAGS = -xHost -O3 -no-prec-div -static -fp-model fast=2 -restrict -funroll-loops -no-inline-max-size
+GCCOPTFLAGS = -O3 -static -funroll-loops -ffast-math -ffinite-math-only -freciprocal-math -ftree-vectorize -flto
 # -vectorize-slp -mllvm -bb-vectorize-aligned-only -fslp-vectorize-aggressive -fstrict-vtable-pointers -fwhole-program-vtables
 
 # Compilation for gcc or intel
-GCOMP = $(GCC) $(GCCOPTFLAGS)
-ICOMP = $(ICC) $(ICCOPTFLAGS)
+ICOMP = $(ICC) $(ICSTD) -g # $(ICCOPTFLAGS)
+GCOMP = $(GCC) $(GCSTD) -g $(GCCOPTFLAGS)
 
 # -- Choose whether to use gcc or intel --
 # -- For intel,
@@ -24,9 +24,9 @@ CC   = $(ICC)
 COMP = $(ICOMP)
 
 # All object files needed
-SRC_OBJECTS   = build/Field.o build/System.o build/Field.o build/VField.o build/vec2d.o
+SRC_OBJECTS = build/Field.o build/System.o build/Field.o build/VField.o build/vec2d.o build/DataRecord.o
 
-ALL_OBJECTS     = $(SRC_OBJECTS)
+ALL_OBJECTS = $(SRC_OBJECTS)
 
 all: bin/driver 
 

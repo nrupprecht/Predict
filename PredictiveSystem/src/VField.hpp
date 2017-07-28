@@ -6,12 +6,21 @@
 
 namespace Predictive {
 
+  // Forward declaration
+  class Field;
+
+  /*
+   * @class VField
+   * Vector field class
+   */
   class VField : public FieldBase<vec2> {
   public:
+    // Constructors
     VField();
-    ~VField();
-  private:
+    VField(const Bounds&);
     
+    // Sets this field to be the gradient field of the supplied field
+    void gradient(const Field&);
   };
 
 }

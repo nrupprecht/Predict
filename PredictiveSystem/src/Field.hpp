@@ -5,10 +5,18 @@
 
 namespace Predictive {
   
+  /*
+   * @class Field
+   * Scalar field class
+   */
   class Field : public FieldBase<RealType> {
   public:
+    // Constructors
     Field();
-    ~Field(); 
+    Field(Bounds);
+
+    // Set this field to be the laplacian of another field
+    void laplacian(Field&);
   };
 
 }

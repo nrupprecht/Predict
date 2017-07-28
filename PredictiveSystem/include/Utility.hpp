@@ -57,10 +57,6 @@ using std::string;
 
 #include <cstring> // For memset it mpi.h is not defined
 
-#if USE_MPI == 1
-#include <mpi.h>
-#endif
-
 namespace Predictive {
 
   // What type to use as our real type
@@ -76,7 +72,7 @@ namespace Predictive {
   typedef vector<WListSubType> WListType;
 
   // Constants
-  const double PI = 3.14159265358979;
+  const RealType PI = 3.14159265358979;
 
   // Squaring function
   template<typename T> inline T sqr(const T& value) {
@@ -162,6 +158,15 @@ namespace Predictive {
   static std::mt19937 generator;
   static std::normal_distribution<RealType> normal_dist(0., 1.);
   // static std::poisson_distribution<int> poisson_dist();
+
+  inline void seedNormalDistribution() {
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    generator = std::mt19937(seed);
+  }
+
+  inline double randNormal() {
+    return normal_dist(generator);
+  }
 }
 
 #endif // __UTILITY_HPP__

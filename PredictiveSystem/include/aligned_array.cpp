@@ -23,7 +23,9 @@ template<typename T> aligned_array<T>::~aligned_array() {
 }
 
 template<typename T> void aligned_array<T>::reserve(int ns) {
-  //T* new_data = alignedAlloc(_alignment, ns);
+  // Look for bad sizes
+  if (ns==0) return;
+  // Allocate data
   T *new_data;
   alignedAlloc(new_data, _alignment, ns);
   if (data) {
@@ -42,7 +44,9 @@ template<typename T> void aligned_array<T>::reserve(int ns) {
 }
 
 template<typename T> void aligned_array<T>::reserve(int ns, const T& value) {
-  //T* new_data = alignedAlloc(_alignment, ns);
+  // Look for bad sizes
+  if (ns<=0) return;
+  // Allocate data
   T *new_data;
   alignedAlloc(new_data, _alignment, ns);
   if (data) {
@@ -62,7 +66,9 @@ template<typename T> void aligned_array<T>::reserve(int ns, const T& value) {
 
 template<typename T> void aligned_array<T>::reserve2(int oldFirst, int newFirst, int oldSecond, int newSecond) {
   unsigned int ns = newFirst + newSecond;
-  //T* new_data = alignedAlloc(_alignment, ns);
+  // Look for bad sizes
+  if (ns<=0) return;
+  // Allocate data
   T *new_data;
   alignedAlloc(new_data, _alignment, ns);
   if (data) {
@@ -73,7 +79,6 @@ template<typename T> void aligned_array<T>::reserve2(int oldFirst, int newFirst,
     for (; i<newFirst; ++i)  new_data[i] = T();
     for (i=0; i<index2; ++i) new_data[newFirst+i] = data[oldFirst+i];
     for (; i<newSecond; ++i) new_data[i] = T();
-    
     // Free old data
     free(data);
   }
@@ -83,7 +88,9 @@ template<typename T> void aligned_array<T>::reserve2(int oldFirst, int newFirst,
 
 template<typename T> void aligned_array<T>::reserve2(int oldFirst, int newFirst, int oldSecond, int newSecond, const T& value) {
   int ns = newFirst + newSecond;
-  // T* new_data = alignedAlloc(_alignment, ns);
+  // Look for bad sizes
+  if (ns<=0 || newFirst<0 || newSecond<0) return;
+  // Allocate data
   T *new_data;
   alignedAlloc(new_data, _alignment, ns);
   if (data) {
@@ -94,7 +101,6 @@ template<typename T> void aligned_array<T>::reserve2(int oldFirst, int newFirst,
     for (; i<newFirst; ++i)  new_data[i] = value;
     for (i=0; i<index2; ++i) new_data[newFirst+i] = data[oldFirst+i];
     for (; i<newSecond; ++i) new_data[i] = value;
-
     // Free old data
     free(data);
   }
@@ -103,6 +109,14 @@ template<typename T> void aligned_array<T>::reserve2(int oldFirst, int newFirst,
 }
 
 template<typename T> void aligned_array<T>::resize(int s) {
+  // Don't try to allocate an array of size <= 0
+  if (s<=0) {
+    _size = 0;
+    if (data) free(data);
+    data = nullptr;
+    return;
+  }
+  // Destroy old data, allocate new ones
   if (data) free(data);
   _size = s;
   alignedAlloc(data, _alignment, _size);
@@ -111,11 +125,22 @@ template<typename T> void aligned_array<T>::resize(int s) {
 }
 
 template<typename T> void aligned_array<T>::resize(int s, T v) {
+  // Don't try to allocate an array of size <= 0
+  if (s<=0) {
+    _size = 0;
+    if (data) free(data);
+    data = nullptr;
+  }
+  // Destroy old data, allocate new ones
   if (data) free(data);
   _size = s;
   alignedAlloc(data, _alignment, _size);
   // Set values
   for (int i=0; i<s; ++i) data[i] = v;
+}
+
+template<typename T> void aligned_array<T>::reset() {
+  resize(0);
 }
 
 template<typename T> T& aligned_array<T>::at(int i) {

@@ -11,53 +11,59 @@
 
 #include "Utility.hpp"
 
-using Predictive::RealType;
-
-/*
- * @class vec2
- * Two dimensional vector class
- *
- */
-struct vec2 {
-  // Default constructor
-  vec2() : x(0), y(0) {};
+namespace Predictive {
   
-  // Initialized constructor
-  vec2(RealType x, RealType y) : x(x), y(y) {};
+  /*
+   * @class vec2
+   * Two dimensional vector class
+   *
+   */
+  struct vec2 {
+    // Default constructor
+    vec2() : x(0), y(0) {};
+    
+    // Initialized constructor
+    vec2(RealType x, RealType y) : x(x), y(y) {};
+    
+    // The actual vector data
+    RealType x, y;
+    
+    // Operators
+    vec2 operator-() const;
+    vec2 operator-(const vec2&) const;
+    vec2& operator-=(const vec2&);
+    vec2 operator+(const vec2&) const;
+    vec2& operator+=(const vec2&);
+    RealType operator*(const vec2&) const;
+    RealType operator^(const vec2&) const;
+    friend vec2 operator*(const RealType, const vec2&);
+    
+    friend std::ostream& operator<<(std::ostream&, const vec2&);
+    
+    bool operator==(const vec2&) const;
+    bool operator!=(const vec2&) const;
+  };
   
-  // The actual vector data
-  RealType x, y;
-
-  // Operators
-  vec2 operator-() const;
-  vec2 operator-(const vec2&) const;
-  vec2& operator-=(const vec2&);
-  vec2 operator+(const vec2&) const;
-  vec2& operator+=(const vec2&);
-  RealType operator*(const vec2&) const;
-  RealType operator^(const vec2&) const;
-  friend vec2 operator*(const RealType, const vec2&);
-
-  friend std::ostream& operator<<(std::ostream&, const vec2&);
-
-  bool operator==(const vec2&) const;
-  bool operator!=(const vec2&) const;
-};
-
-const vec2 Zero(0,0);
-
-// Special squaring function for vectors (not a reference so we can use lvalues)
-inline RealType sqr(const vec2 v) { return v*v; }
-
-// Normalization function
-inline void normalize(vec2 &v) {
-  RealType mag = sqrt(sqr(v));
-  v.x /= mag; v.y /= mag;
+  const vec2 Zero(0,0);
+  
+  // Special squaring function for vectors (not a reference so we can use lvalues)
+  inline RealType sqr(const vec2 v) { return v*v; }
+  
+  // Normalization function
+  inline void normalize(vec2 &v) {
+    RealType mag = sqrt(sqr(v));
+    v.x /= mag; v.y /= mag;
+  }
+  
+  // (not a reference so we can use lvalues)
+  inline RealType length(const vec2 v) {
+    return sqrt(sqr(v));
+  }
+  
+  inline vec2 randV() {
+    RealType angle = 2*PI*drand48();
+    return vec2(cos(angle), sin(angle));
+  }
+  
 }
-
-// (not a reference so we can use lvalues)
-inline RealType length(const vec2 v) {
-  return sqrt(sqr(v));
-}
-
 #endif // __VEC_2D_HPP__
