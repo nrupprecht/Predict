@@ -17,6 +17,10 @@ namespace Predictive {
     // Record data
     void record(System*);
 
+    // Mutators
+    void setNPPaths(int n) { npPaths = n; }
+    void setNGPaths(int n) { ngPaths = n; }
+
     // Write data
     void write(string);
     

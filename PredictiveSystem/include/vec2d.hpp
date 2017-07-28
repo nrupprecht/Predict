@@ -52,7 +52,9 @@ namespace Predictive {
   // Normalization function
   inline void normalize(vec2 &v) {
     RealType mag = sqrt(sqr(v));
-    v.x /= mag; v.y /= mag;
+    if (mag>0) {
+      v.x /= mag; v.y /= mag;
+    }
   }
   
   // (not a reference so we can use lvalues)

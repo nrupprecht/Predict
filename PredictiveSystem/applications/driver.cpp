@@ -9,11 +9,6 @@ using namespace Predictive;
 
 int main(int argc, char** argv) {
 
-  Bounds b(0,1,0,1);
-  Field f;
-  f = Field(b);
-  return 0;
-
   // Parameters
   RealType time        = 1.; // Simulation time
   int nPred            = 500;     // Number of predictive agents
@@ -23,6 +18,9 @@ int main(int argc, char** argv) {
   RealType tau         = 0.05;  // Predictivity
   RealType velocity    = 0.1; 
   RealType temperature = 0;
+
+  int nPredPaths       = 10;
+  int nGradPaths       = 10;
 
   // Parse arguments
   ArgParse parser(argc, argv);
@@ -35,8 +33,13 @@ int main(int argc, char** argv) {
   parser.get("velocity", velocity);
   parser.get("temperature", temperature);
 
+  parser.get("nPredPaths", nPredPaths);
+  parser.get("nPredPaths", nPredPaths);
+
   // Set parameters
   DataRecord data;
+  data.setNPPaths(nPredPaths);
+  data.setNGPaths(nPredPaths);
   System predictive(data);
   predictive.setNPred(nPred);
   predictive.setNGrad(nGrad);

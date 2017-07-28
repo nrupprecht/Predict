@@ -56,12 +56,12 @@ namespace Predictive {
       // Update agents
       updateAgents();
       // Consume resource
-      // consume();
+      consume();
       // Update resource (diffusion)
-      // diffusion();
+      diffusion();
       // Possible update trajectory field
       if (itimer>=idelay) {
-	// computeTrajectory();
+	computeTrajectory();
 	itimer = 0.;
       }
       // Record data
@@ -81,12 +81,12 @@ namespace Predictive {
 
     // Update predictive agents
     for (auto &p : pAgents) {
-      // vec2 v = trajectory.get(p);
-      //normalize(v);
-      // p += velocity*v;
+      vec2 v = trajectory.get(p);
+      normalize(v);
+      p += velocity*epsilon*v;
       if (temperature>0) {
 	vec2 perturb = sqrt(temperature*epsilon)*randNormal()*randV();
-	p += perturb;
+	p += epsilon*perturb;
       }
       bounds.wrap(p);
     }
@@ -115,15 +115,12 @@ namespace Predictive {
   }
 
   inline void System::diffusion() {
-    /*
     diffField.laplacian(resource[t_iter]);
     // Do diffusion
     resource[t_iter].minusEq(diffField, epsilon);
-    */
   }
 
   inline void System::computeTrajectory() {
-    /*
     if (nPred>0) {
       // Compute the trajectory field for predictive agents
     }
@@ -131,7 +128,6 @@ namespace Predictive {
       // Compute the gradient of the current resource, for the gradient agents' use
       gradient.gradient(resource[t_iter]);
     }
-    */
   }
 
 }
