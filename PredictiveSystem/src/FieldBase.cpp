@@ -23,12 +23,18 @@ template<typename T> void FieldBase<T>::initialize() {
   data.resize(nx*ny);
 }
 
-template<typename T> void set(T (*func) (vec2)) {
-  for (int y=0; y<sy; ++y)
-    for (int x=0; x<sx; ++x) {
+template<typename T> void FieldBase<T>::set(std::function<RealType(vec2)> func) {
+  for (int y=0; y<ny; ++y)
+    for (int x=0; x<nx; ++x) {
       vec2 p = getPosition(x,y);
-      data.at(y*ns+x) = func(p);
+      data.at(y*nx+x) = func(p);
     }
+}
+
+template<typename T> void FieldBase<T>::set(T value) {
+  for (int y=0; y<ny; ++y)
+    for (int x=0; x<nx; ++x)
+      data.at(y*nx+x) = value;
 }
 
 template<typename T> FieldBase<T>& FieldBase<T>::operator=(const FieldBase<T>& field) {
@@ -56,6 +62,9 @@ template<typename T> T& FieldBase<T>::at(int x, int y) {
 }
 
 template<typename T> T FieldBase<T>::at(int x, int y) const {
+
+  int ox = x, oy = y;
+
   if (wrap) {
     if (nx<=x)    x-=nx;
     else if (x<0) x+=nx;

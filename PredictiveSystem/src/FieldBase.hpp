@@ -11,6 +11,8 @@
 #include "../include/Bounds.hpp"
 #include "../include/aligned_array.hpp"
 
+#include <functional>
+
 namespace Predictive {
   
   /*
@@ -29,12 +31,17 @@ namespace Predictive {
     void initialize();
 
     // Field setting
-    void set(T (*func) (vec2));
+    void set(std::function<RealType(vec2)>);
+    void set(T);
     FieldBase& operator=(const FieldBase&);
 
     // Grid point access
     T& at(int, int);
     T at(int, int) const;
+
+    // Accessors
+    int getNX() { return nx; }
+    int getNY() { return ny; }
 
     // Grid point location
     vec2 getPosition(int, int) const;
@@ -58,6 +65,18 @@ namespace Predictive {
     // Exception classes
     struct UnalignedSpacing {};
 
+    friend inline bool printToCSV(string filename, const FieldBase& field) {
+      ofstream fout(filename);
+      if (fout.fail()) return false;
+
+      for(int y=0; y<field.ny; ++y)
+	for(int x=0; x<field.nx; ++x)
+	  fout << toCSV(field.getPosition(x,y)) << "," << toCSV(field.at(x,y)) << "\n";
+      
+      fout.close();
+      return true;
+    }
+
   protected:
     RealType dx, dy;   // Grid spacing
     RealType idx, idy; // Inverse of grid spacing
@@ -68,6 +87,19 @@ namespace Predictive {
   };
 
 #include "FieldBase.cpp"
+
+  /*
+  inline bool printToCSV(string filename, const FieldBase& field) {
+    ofstream fout(filename);
+    if (four.fail()) return false;
+    
+    for (int y=0; y<field.ny; ++y)
+      for (int x=0; x<field.nx; ++x) 
+    
+    fout.close();
+    return true;
+  }
+  */
   
 }
 #endif // __FIELD_BASE_HPP

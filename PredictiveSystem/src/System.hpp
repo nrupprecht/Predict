@@ -4,6 +4,7 @@
 #include "Field.hpp"
 #include "VField.hpp"
 #include "DataRecord.hpp"
+#include "FieldGenerator.hpp"
 
 namespace Predictive {
   
@@ -24,10 +25,10 @@ namespace Predictive {
     void setNPred(int n)        { nPred = max(0,n); }
     void setNGrad(int n)        { nGrad = max(0,n); }
     void setSIters(int s)       { sIters = max(0,s); }
-    void setEpsilon(RealType e) { epsilon = fabs(e); }
+    void setEpsilon(RealType e);
     void setTau(RealType t)     { tau = fabs(t); }
     void setVelocity(RealType v) { velocity = fabs(v); }
-    void setTemperature(RealType t) { temperature = fabs(t); }
+    void setTemperature(RealType t);
     
   private:
     // Private helper functions
@@ -60,6 +61,9 @@ namespace Predictive {
     Field diffField;
     VField trajectory; // The predictive agent trajectory field
     VField gradient;   // The gradient of the resource
+
+    // For temperature
+    RealType radius, viscosity, Dt, factor;
     
     // Data
     aligned_array<vec2> pAgents, gAgents;   // Predictive and gradient agent positions

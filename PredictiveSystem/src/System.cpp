@@ -2,9 +2,18 @@
 
 namespace Predictive {
 
-  System::System() : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(0.05), epsilon(0.001), time(1.), t_iter(0), idelay(0.005), temperature(0), data(nullptr), bounds(Bounds(0,1,0,1)) {};
-
+  System::System() : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(0.05), epsilon(0.001), time(1.), t_iter(0), idelay(0.005), temperature(0), data(nullptr), bounds(Bounds(0,1,0,1)) {
+    radius = 0.05;
+    viscosity = 1.308e-3; // Viscosity of water
+    Dt = temperature/(6*viscosity*PI*radius);
+    factor = sqrt(2*Dt*epsilon);
+  };
+  
   System::System(DataRecord& dat) : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(0.05), epsilon(0.001), time(1.), t_iter(0), idelay(0.005), temperature(0), bounds(Bounds(0,1,0,1)) {
+    radius = 0.05;
+    viscosity = 1.308e-3; // Viscosity of water
+    Dt = temperature/(6*viscosity*PI*radius);
+    factor = sqrt(2*Dt*epsilon);
     data = &dat;
   }
 
@@ -18,6 +27,17 @@ namespace Predictive {
       singleIteration();
     }
   }
+
+  void System::setEpsilon(RealType ep) {
+    epsilon = ep;
+    factor = sqrt(2*Dt*epsilon);
+  }
+
+  void System::setTemperature(RealType t) {
+    temperature = t;
+    Dt = temperature/(6*viscosity*PI*radius);
+    factor = sqrt(2*Dt*epsilon);
+  }
   
   inline void System::initialize(RealType rt) {
     // Set times
@@ -30,6 +50,12 @@ namespace Predictive {
     gradient   = VField(bounds); // Gradient field
     // Initialize resource fields
     for (int i=0; i<t_max; ++i) resource[i] = Field(bounds);
+    // Set the initial resource field
+    FieldGenerator fieldGenerator;
+    //fieldGenerator.createTwoPeaks(resource[0]);
+    fieldGenerator.createSmoothNoise(resource[0]);
+    printToCSV("Field.csv", resource[0]); //**
+
     // Initialize agents with random positions
     pAgents.resize(nPred);
     ipAgents.resize(nPred);
@@ -84,10 +110,7 @@ namespace Predictive {
       vec2 v = trajectory.get(p);
       normalize(v);
       p += velocity*epsilon*v;
-      if (temperature>0) {
-	vec2 perturb = sqrt(temperature*epsilon)*randNormal()*randV();
-	p += epsilon*perturb;
-      }
+      if (temperature>0) p += epsilon*factor*randNormal()*randV();
       bounds.wrap(p);
     }
     // Update gradient agents

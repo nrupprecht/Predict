@@ -5,6 +5,9 @@
 #include "../include/ArgParse.hpp"
 #include "../src/System.hpp"
 
+#include <ctime>
+#include <cstdlib>
+
 using namespace Predictive;
 
 int main(int argc, char** argv) {
@@ -22,6 +25,11 @@ int main(int argc, char** argv) {
   int nPredPaths       = 10;
   int nGradPaths       = 10;
 
+  // Seed random
+  srand48( std::time( NULL ) );
+  seedNormalDistribution();
+
+
   // Parse arguments
   ArgParse parser(argc, argv);
   parser.get("time", time);
@@ -35,6 +43,15 @@ int main(int argc, char** argv) {
 
   parser.get("nPredPaths", nPredPaths);
   parser.get("nPredPaths", nPredPaths);
+  // Make sure we didn't enter any illegal tokens (ones not listed above) on the command line
+  try {
+    parser.check();
+  }
+  catch (ArgParse::UncheckedToken illegal) {
+    cout << "Illegal option: [" << illegal.token << "]. Exiting.\n";
+    exit(1);
+  }
+
 
   // Set parameters
   DataRecord data;

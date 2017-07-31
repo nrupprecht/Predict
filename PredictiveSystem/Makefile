@@ -24,7 +24,7 @@ CC   = $(ICC)
 COMP = $(ICOMP)
 
 # All object files needed
-SRC_OBJECTS = build/Field.o build/System.o build/Field.o build/VField.o build/vec2d.o build/DataRecord.o
+SRC_OBJECTS = build/Field.o build/System.o build/Field.o build/VField.o build/vec2d.o build/DataRecord.o build/FieldGenerator.o
 
 ALL_OBJECTS = $(SRC_OBJECTS)
 

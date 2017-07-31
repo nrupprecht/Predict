@@ -68,11 +68,11 @@ namespace Predictive {
       return left<=b.left && b.right<=right && bottom<=b.bottom && b.top<=top;
     }
 
-    void wrap(vec2 pos) {
-      if (pos.x<left)        pos.x += (right-left);
-      else if (right<=pos.x) pos.x -= (right-left);
-      if (pos.y<bottom)      pos.y += (top-bottom);
-      else if (top<=pos.y)   pos.y -= (top-bottom);
+    void wrap(vec2& pos) {
+      if (pos.x<left)        pos.x = right  - fmod(left-pos.x, right-left);
+      else if (right<=pos.x) pos.x = left   + fmod(pos.x-left, right-left);
+      if (pos.y<bottom)      pos.y = top    - fmod(bottom-pos.y, top-bottom);
+      else if (top<=pos.y)   pos.y = bottom + fmod(pos.y-bottom, top-bottom);
     }
   };
   
