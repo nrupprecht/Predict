@@ -8,6 +8,14 @@
 
 namespace Predictive {
   
+  // Default constants
+  const int default_field_points = 50;
+  
+  /*
+   * @class System
+   * The class that runs predictive simulations
+   * 
+   */
   class System {
   public:
     // Constructors
@@ -20,6 +28,16 @@ namespace Predictive {
     void run(RealType);
 
     // Accessors
+    int getNPred() { return nPred; }
+    int getNGrad() { return nGrad; }
+    int getSIters() { return sIters; }
+    RealType getTau() { return tau; }
+    RealType getEpsilon() { return epsilon; }
+    RealType getVelocity() { return velocity; }
+    RealType getTemperature() { return temperature; }
+    RealType getDiffusion() { return diffusion; }
+    RealType getConsumption() { return consumption; }
+    int getFieldPoints() { return fieldPoints; }
 
     // Mutators
     void setNPred(int n)        { nPred = max(0,n); }
@@ -29,6 +47,9 @@ namespace Predictive {
     void setTau(RealType t)     { tau = fabs(t); }
     void setVelocity(RealType v) { velocity = fabs(v); }
     void setTemperature(RealType t);
+    void setDiffusion(RealType d) { diffusion = d; }
+    void setConsumption(RealType c) { consumption = c; }
+    void setFieldPoints(int n)  { fieldPoints = n; }
     
   private:
     // Private helper functions
@@ -36,7 +57,7 @@ namespace Predictive {
     inline void singleIteration();
     inline void updateAgents();
     inline void consume();
-    inline void diffusion();
+    inline void resourceDiffusion();
     inline void computeTrajectory();
 
     // Constants (external parameters)
@@ -47,7 +68,9 @@ namespace Predictive {
     RealType epsilon;  // Time step
     RealType velocity; // Agent velocity
     RealType temperature; // A stochastic perturbation strength for the agents
-
+    RealType diffusion;   // Resource diffusion
+    RealType consumption; // Agents' resource consumptions
+    
     // Internal parameters
     RealType runTime;  // How much time to simulate
     RealType time;     // Current time
@@ -55,8 +78,12 @@ namespace Predictive {
     int t_iter, t_max; // The current temporal iteration, ending temporal iteration
     RealType itimer;   // How long since the last integration
     RealType idelay;   // Integration delay
+    int iIter;         // What integration step we are on
+    int iPoints;       // How many integration slices we will have - this is calculated before each run
+    int fieldPoints;   // How many points we use in the fields
     // The resource at different time slices. The first (0-th) time slice is the initial resource - we never change this. The t_iter-th resource is the current resource. Resources after this are the *predicted* resource fields.
-    Field *resource;
+    Field *resourceRec;
+    Field resource, resbb; // Resource and resource buffer
     // Field to calculate diffusion
     Field diffField;
     VField trajectory; // The predictive agent trajectory field

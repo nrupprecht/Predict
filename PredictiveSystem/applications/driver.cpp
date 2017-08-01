@@ -13,22 +13,25 @@ using namespace Predictive;
 int main(int argc, char** argv) {
 
   // Parameters
-  RealType time        = 1.; // Simulation time
-  int nPred            = 500;     // Number of predictive agents
+  RealType time        = 1.;    // Simulated time
+  int nPred            = 500;   // Number of predictive agents
   int nGrad            = 0;     // Number of gradient agents
-  int sIters           = 1;
-  RealType epsilon     = 0.005;
+  int sIters           = 1;     // Solution iterations
+  RealType epsilon     = 0.001; // Time step
   RealType tau         = 0.05;  // Predictivity
-  RealType velocity    = 0.1; 
-  RealType temperature = 0;
+  RealType velocity    = 0.1;   // Agent velocity
+  RealType temperature = 0;     // Temperature applies brownian perturbation to agents
+  RealType diffusion   = 0.1;  // Resource diffusion
 
-  int nPredPaths       = 10;
-  int nGradPaths       = 10;
+  int fieldPoints      = -1;
+  int nPredPaths       = nPred;
+  int nGradPaths       = nGrad;
+
+  string writeDirectory = "RunData"; // The directory we will create (or overwrite) to write data to
 
   // Seed random
   srand48( std::time( NULL ) );
   seedNormalDistribution();
-
 
   // Parse arguments
   ArgParse parser(argc, argv);
@@ -40,9 +43,13 @@ int main(int argc, char** argv) {
   parser.get("tau", tau);
   parser.get("velocity", velocity);
   parser.get("temperature", temperature);
+  parser.get("diffusion", diffusion);
 
+  parser.get("fieldPoints", fieldPoints);
   parser.get("nPredPaths", nPredPaths);
   parser.get("nPredPaths", nPredPaths);
+  
+  parser.get("writeDirectory", writeDirectory);
   // Make sure we didn't enter any illegal tokens (ones not listed above) on the command line
   try {
     parser.check();
@@ -54,10 +61,12 @@ int main(int argc, char** argv) {
 
 
   // Set parameters
-  DataRecord data;
+  DataRecord data(argc, argv);
   data.setNPPaths(nPredPaths);
   data.setNGPaths(nPredPaths);
+  data.setWriteDirectory(writeDirectory);
   System predictive(data);
+  if (fieldPoints>0) predictive.setFieldPoints(fieldPoints);
   predictive.setNPred(nPred);
   predictive.setNGrad(nGrad);
   predictive.setSIters(sIters);
@@ -65,12 +74,15 @@ int main(int argc, char** argv) {
   predictive.setTau(tau);
   predictive.setVelocity(velocity);
   predictive.setTemperature(temperature);
+  predictive.setDiffusion(diffusion);
+
   
   // Run system
   predictive.run(time);
 
   // Write data
-  data.write("RunData");
+  data.writeSummary(&predictive);
+  data.write();
 
   // End
   return 0;

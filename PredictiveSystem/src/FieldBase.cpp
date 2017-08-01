@@ -6,18 +6,16 @@ template<typename T> FieldBase<T>::FieldBase(const Bounds& b) : bounds(b), nx(50
   initialize();
 };
 
+template<typename T> FieldBase<T>::FieldBase(const Bounds& b, int n) : bounds(b), nx(n), ny(n), wrap(true) {
+  initialize();
+};
+
 template<typename T> FieldBase<T>::~FieldBase() {};
 
 template<typename T> void FieldBase<T>::initialize() {
   // Assumes bounds, nx, and ny are correct, other variables need reset
-  if (wrap) {
-    dx = (bounds.right - bounds.left)/nx;
-    dy = (bounds.top - bounds.bottom)/ny;
-  }
-  else {
-    dx = (bounds.right - bounds.left)/(nx-1);
-    dy = (bounds.top - bounds.bottom)/(ny-1);
-  }
+  dx = (bounds.right - bounds.left)/nx;
+  dy = (bounds.top - bounds.bottom)/ny;
   idx = 1./dx; idy = 1./dy;
   // Resize the data array
   data.resize(nx*ny);
@@ -53,29 +51,47 @@ template<typename T> FieldBase<T>& FieldBase<T>::operator=(const FieldBase<T>& f
 
 template<typename T> T& FieldBase<T>::at(int x, int y) {
   if (wrap) {
-    if (nx<=x)    x-=nx;
-    else if (x<0) x+=nx;
-    if (ny<=y)    y-=ny;
-    else if (y<0) y+=ny;
+    if (nx<=x)    x %= nx;
+    else if (x<0) x = nx - (-x) % nx;
+    if (ny<=y)    y %= ny;
+    else if (y<0) y = ny - (-y) % ny;
   }
   return data.at(nx*y + x);
 }
 
 template<typename T> T FieldBase<T>::at(int x, int y) const {
-
-  int ox = x, oy = y;
-
   if (wrap) {
-    if (nx<=x)    x-=nx;
-    else if (x<0) x+=nx;
-    if (ny<=y)    y-=ny;
-    else if (y<0) y+=ny;
+    if (nx<=x)    x %= nx;
+    else if (x<0) x = nx - (-x) % nx;
+    if (ny<=y)    y %= ny;
+    else if (y<0) y = ny - (-y) % ny;
   }
   return data.at(nx*y + x);
 }
 
+template<typename T> void FieldBase<T>::setNX(int n) {
+  nx = n;
+  initialize();
+}
+
+template<typename T> void FieldBase<T>::setNY(int n) {
+  ny = n;
+  initialize();
+}
+
+template<typename T> void FieldBase<T>::setN(int n) {
+  nx = ny = n;
+  initialize();
+}
+
+template<typename T> void FieldBase<T>::setWrap(bool w) {
+  wrap = w;
+}
+
 template<typename T> vec2 FieldBase<T>::getPosition(int x, int y) const {
-  return vec2(x*dx+bounds.left, y*dy+bounds.bottom);
+  // Data is stored for the center of the points, so the 0th point corresponds
+  //  to 0.5*dx, etc.
+  return vec2( (0.5+x)*dx+bounds.left, (0.5+y)*dy+bounds.bottom );
 }
 
 template<typename T> T FieldBase<T>::get(vec2 pos) const {
@@ -94,12 +110,17 @@ template<typename T> T FieldBase<T>::get(vec2 pos) const {
   return y*(p_F-p_E) + p_E;
 }
 
+template<typename T> T& FieldBase<T>::get(vec2 pos) {
+  int x = static_cast<int>((pos.x-bounds.left)*idx), y = static_cast<int>((pos.y-bounds.bottom)*idy);
+  return data.at(nx*y + x);
+}
+
 template<typename T> T FieldBase<T>::DX(vec2 pos) const {
   // Approximate derivative as derivative at left/bottom grid point
   double X = (pos.x-bounds.left)*idx, Y = (pos.y-bounds.bottom)*idy;
   double x = (int)X, y = (int)Y;
-  if (wrap || (x!=0 || x!=nx-1))
-    return sqr(idx)*(at(x+1,y) - 2*at(x,y) + at(x-1,y));
+  if (wrap || (x!=0 && x!=nx-1))
+    return 0.5*idx*(at(x+1,y) - at(x-1,y));
   else if (x==0)    return idx*(at(x+1,y)-at(x,y));
   else if (x==nx-1) return idx*(at(x,y)-at(x-1,y));
 }
@@ -108,63 +129,88 @@ template<typename T> T FieldBase<T>::DY(vec2 pos) const {
   // Approximate derivative as derivative at closest grid point
   double X = (pos.x-bounds.left)*idx, Y = (pos.y-bounds.bottom)*idy;
   double x = (int)X, y = (int)Y;
-  if (wrap || (y!=0 || y!=ny-1))
-    return sqr(idy)*(at(x,y+1) - 2*at(x,y) + at(x,y-1));
+  if (wrap || (y!=0 && y!=ny-1))
+    return 0.5*idy*(at(x,y+1) - at(x,y-1));
   else if (y==0)    return idy*(at(x,y+1)-at(x,y));
   else if (y==ny-1) return idy*(at(x,y)-at(x,y-1));
 }
 
 template<typename T> T FieldBase<T>::DX(int x, int y) const {
-  if (wrap || (x!=0 || x!=nx-1))
-    return sqr(idx)*(at(x+1,y) - 2*at(x,y) + at(x-1,y));
-  else if (x==0)    return idx*(at(x+1,y)-at(x,y));
-  else if (x==nx-1) return idx*(at(x,y)-at(x-1,y));
+  if (wrap || (x!=0 && x!=nx-1))
+    return 0.5*idx*(at(x+1,y) - at(x-1,y));
+  else if (x==0)    return idx*(at(1,y)-at(0,y));
+  else if (x==nx-1) return idx*(at(nx-1,y)-at(nx-2,y));
 }
 
 template<typename T> T FieldBase<T>::DY(int x, int y) const {
-  if (wrap || (y!=0 || y!=ny-1))
-    return sqr(idy)*(at(x,y+1) - 2*at(x,y) + at(x,y-1));
-  else if (y==0)    return idy*(at(x,y+1)-at(x,y));
-  else if (y==ny-1) return idy*(at(x,y)-at(x,y-1));
+  if (wrap || (y!=0 && y!=ny-1))
+    return 0.5*idy*(at(x,y+1) - at(x,y-1));
+  else if (y==0)    return idy*(at(x,1)-at(x,0));
+  else if (y==ny-1) return idy*(at(x,ny-1)-at(x,ny-2));
 }
 
 template<typename T> T FieldBase<T>::DX2(vec2 pos) const {
   // Approximate derivative as derivative at left/bottom grid point
   double X = (pos.x-bounds.left)*idx, Y = (pos.y-bounds.bottom)*idy;
   double x = (int)X, y = (int)Y;
-  if (wrap || (x!=0 || x!=nx-1))
-    return sqr(idx)*(DX(x+1,y) - 2*DX(x,y) + DX(x-1,y));
-  else if (x==0)    return idx*(DX(x+1,y)-DX(x,y));
-  else if (x==nx-1) return idx*(DX(x,y)-DX(x-1,y));
+  if (wrap || (x!=0 && x!=nx-1))
+    return sqr(idx)*(at(x+1,y) - 2*at(x,y) + at(x-1,y));
+  else if (x==0)    return sqr(idx)*(at(2,y)-2*at(1,y)+at(0,y));
+  else if (x==nx-1) return sqr(idx)*(at(nx-1,y)-2*at(nx-2,y)+at(nx-3,y));
 }
 
 template<typename T> T FieldBase<T>::DY2(vec2 pos) const {
   // Approximate derivative as derivative at closest grid point
   double X = (pos.x-bounds.left)*idx, Y = (pos.y-bounds.bottom)*idy;
   double x = (int)X, y = (int)Y;
-  if (wrap || (y!=0 || y!=ny-1))
-    return sqr(idy)*(DY(x,y+1) - 2*DY(x,y) + DY(x,y-1));
-  else if (y==0)    return idy*(DY(x,y+1)-DY(x,y));
-  else if (y==ny-1) return idy*(DY(x,y)-DY(x,y-1));
+  if (wrap || (y!=0 && y!=ny-1))
+    return sqr(idy)*(at(x,y+1) - 2*at(x,y) + at(x,y-1));
+  else if (y==0)    return sqr(idy)*(at(x,0)-2*at(x,1)+at(x,2));
+  else if (y==ny-1) return sqr(idy)*(at(x,ny-1)-2*at(x,ny-2)+at(x,ny-3));
 }
 
 template<typename T> T FieldBase<T>::DX2(int x, int y) const {
-  if (wrap || (x!=0 || x!=nx-1))
-    return sqr(idx)*(DX(x+1,y) - 2*DX(x,y) + DX(x-1,y));
-  else if (x==0)    return idx*(DX(x+1,y)-DX(x,y));
-  else if (x==nx-1) return idx*(DX(x,y)-DX(x-1,y));
+  if (wrap || (x!=0 && x!=nx-1))
+    return sqr(idx)*(at(x+1,y) - 2*at(x,y) + at(x-1,y));
+  else if (x==0)    return sqr(idx)*(at(2,y)-2*at(1,y)+at(0,y));
+  else if (x==nx-1) return sqr(idx)*(at(nx-1,y)-2*at(nx-2,y)+at(nx-3,y));
 }
 
 template<typename T> T FieldBase<T>::DY2(int x, int y) const {
-  if (wrap || (y!=0 || y!=ny-1))
-    return sqr(idy)*(DY(x,y+1) - 2*DY(x,y) + DY(x,y-1));
-  else if (y==0)    return idy*(DY(x,y+1)-DY(x,y));
-  else if (y==ny-1) return idy*(DY(x,y)-DY(x,y-1));
+  if (wrap || (y!=0 && y!=ny-1))
+    return sqr(idy)*(at(x,y+1) - 2*at(x,y) + at(x,y-1));
+  else if (y==0)    return sqr(idy)*(at(x,0)-2*at(x,1)+at(x,2));
+  else if (y==ny-1) return sqr(idy)*(at(x,ny-1)-2*at(x,ny-2)+at(x,ny-3));
 }
 
-template<typename T> void FieldBase<T>::minusEq(FieldBase<T> &field, RealType mult) {
-  if (nx!=field.nx || ny!=field.ny) throw UnalignedSpacing();
+template<typename T> T FieldBase<T>::Lap(int x, int y) const {
+  if (wrap || (x!=0 && x!=nx-1 && y!=0 && y!=ny-1)) {
+    if (dx==dy)
+      return sqr(idx)*(at(x+1,y) + at(x-1,y) + at(x,y+1) + at(x,y-1) - 4*at(x,y));
+    else return sqr(idx)*(at(x-1,y) + at(x+1,y) - 2*at(x,y)) + sqr(idy)*(at(x,y-1) + at(x,y+1) - 2*at(x,y));
+  }
+  // Normal way of taking the laplacian
+  else return DX2(x,y) + DY2(x,y);
+}
+
+template<typename T> void FieldBase<T>::minusEq(FieldBase<T> &field, RealType mult, bool limit) {
+  if (nx!=field.nx || ny!=field.ny) throw UnalignedPoints();
+  if (dx!=field.dx || dy!=field.dy) throw UnalignedSpacing();
+  // Do subtraction
   for (int y=0; y<ny; ++y)
-    for (int x=0; x<nx; ++x) 
+    for (int x=0; x<nx; ++x) {
       at(x,y) -= mult*field.at(x,y);
+      if (limit && at(x,y)<0) at(x,y) = 0;
+    }
+}
+
+template<typename T> void FieldBase<T>::plusEq(FieldBase<T> &field, RealType mult, bool limit) {
+  if (nx!=field.nx || ny!=field.ny) throw UnalignedPoints();
+  if (dx!=field.dx || dy!=field.dy) throw UnalignedSpacing();
+  // Do subtraction
+  for (int y=0; y<ny; ++y)
+    for (int x=0; x<nx; ++x) {
+      at(x,y) += mult*field.at(x,y);
+      if (limit && at(x,y)<0) at(x,y) = 0;
+    }
 }

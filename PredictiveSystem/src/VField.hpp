@@ -18,6 +18,7 @@ namespace Predictive {
     // Constructors
     VField();
     VField(const Bounds&);
+    VField(const Bounds&, int);
     
     // Sets this field to be the gradient field of the supplied field
     void gradient(const Field&);

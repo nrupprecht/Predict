@@ -6,6 +6,8 @@ namespace Predictive {
 
   VField::VField(const Bounds &b) : FieldBase(b) {};
 
+  VField::VField(const Bounds &b, int n) : FieldBase(b, n) {};
+
   void VField::gradient(const Field& field) {
     // Sets this field to be the gradient field of the supplied field
     for (int y=0; y<ny; ++y) 

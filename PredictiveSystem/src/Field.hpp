@@ -13,10 +13,11 @@ namespace Predictive {
   public:
     // Constructors
     Field();
-    Field(Bounds);
+    Field(const Bounds&);
+    Field(const Bounds&, int);
 
     // Set this field to be the laplacian of another field
-    void laplacian(Field&);
+    void laplacian(const Field&);
   };
 
 }

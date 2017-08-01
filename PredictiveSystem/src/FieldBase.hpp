@@ -19,11 +19,16 @@ namespace Predictive {
    * @class FieldBase
    * The base class for all (physical) field - like classes. Contains access,
    *   derivatives, and some basic arithmetic support
+   * The data is stored for the point at the center of the grid division,
+   *   like | * | * | * | * | * |
+   *        0 a 1 b 2 c 3 d 4 e 5
+   *   --> a = 0.5, b = 1.5, etc., dx = 1
    */
   template<typename T> class FieldBase {
   public:
     FieldBase();
     FieldBase(const Bounds&);
+    FieldBase(const Bounds&, int);
     // Destructor
     ~FieldBase();
 
@@ -39,15 +44,24 @@ namespace Predictive {
     T& at(int, int);
     T at(int, int) const;
 
+    // Interpolative field acces
+    T get(vec2) const;
+    // Closest point access
+    T& get(vec2);
+
     // Accessors
     int getNX() { return nx; }
     int getNY() { return ny; }
+    Bounds getBounds() { return bounds; }
+
+    // Mutators
+    void setNX(int);
+    void setNY(int);
+    void setN(int);
+    void setWrap(bool w);
 
     // Grid point location
     vec2 getPosition(int, int) const;
-
-    // Interpolative field acces
-    T get(vec2) const;
 
     // Derivatives
     T DX(vec2) const;
@@ -58,11 +72,14 @@ namespace Predictive {
     T DY2(vec2) const;
     T DX2(int, int) const;
     T DY2(int, int) const;
+    T Lap(int, int) const;
     
     // Arithmetic
-    void minusEq(FieldBase<T>&, RealType=1.);
+    void minusEq(FieldBase<T>&, RealType=1., bool=false);
+    void plusEq (FieldBase<T>&, RealType=1., bool=false);
 
     // Exception classes
+    struct UnalignedPoints  {};
     struct UnalignedSpacing {};
 
     friend inline bool printToCSV(string filename, const FieldBase& field) {
@@ -77,6 +94,27 @@ namespace Predictive {
       return true;
     }
 
+    // Find the maximum value in the field
+    friend inline T max(const FieldBase& field) {
+      T m = T(-1e7);
+      for(int y=0; y<field.ny; ++y)
+        for(int x=0; x<field.nx; ++x)
+	  if (field.at(x,y)>m) m = field.at(x,y);
+      return m;
+    }
+
+    friend inline vec2 max_pos(const FieldBase& field) {
+      T m = T(-1e7);
+      int X(-1), Y(-1);
+      for(int y=0; y<field.ny; ++y)
+        for(int x=0; x<field.nx; ++x)
+	  if (field.at(x,y)>m) {
+	    m = field.at(x,y);
+	    X = x; Y = y;
+	  }
+      return field.getPosition(X,Y);
+    }
+
   protected:
     RealType dx, dy;   // Grid spacing
     RealType idx, idy; // Inverse of grid spacing
@@ -87,19 +125,6 @@ namespace Predictive {
   };
 
 #include "FieldBase.cpp"
-
-  /*
-  inline bool printToCSV(string filename, const FieldBase& field) {
-    ofstream fout(filename);
-    if (four.fail()) return false;
-    
-    for (int y=0; y<field.ny; ++y)
-      for (int x=0; x<field.nx; ++x) 
-    
-    fout.close();
-    return true;
-  }
-  */
   
 }
 #endif // __FIELD_BASE_HPP

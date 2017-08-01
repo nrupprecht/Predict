@@ -10,7 +10,7 @@ GCCOPTFLAGS = -O3 -static -funroll-loops -ffast-math -ffinite-math-only -frecipr
 # -vectorize-slp -mllvm -bb-vectorize-aligned-only -fslp-vectorize-aggressive -fstrict-vtable-pointers -fwhole-program-vtables
 
 # Compilation for gcc or intel
-ICOMP = $(ICC) $(ICSTD) -g # $(ICCOPTFLAGS)
+ICOMP = $(ICC) $(ICSTD) -g $(ICCOPTFLAGS)
 GCOMP = $(GCC) $(GCSTD) -g $(GCCOPTFLAGS)
 
 # -- Choose whether to use gcc or intel --
@@ -28,13 +28,16 @@ SRC_OBJECTS = build/Field.o build/System.o build/Field.o build/VField.o build/ve
 
 ALL_OBJECTS = $(SRC_OBJECTS)
 
-all: bin/driver 
+all: bin/driver
 
 ###### Executables #####
 bin/driver: build/driver.o $(ALL_OBJECTS)
 	$(CC) $^ -o $@
 
 #####   Objects   #####
+build/%.o : %.cpp
+	$(COMP) -c -o $@ $<
+
 build/%.o: applications/%.cpp
 	$(COMP) -c -o $@ $<
 

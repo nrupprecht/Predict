@@ -9,20 +9,23 @@ namespace Predictive {
 
   class DataRecord {
   public:
-    // Constructor
-    DataRecord();
+    // Constructor - pass in argc, argv
+    DataRecord(int, char**);
 
     // Initialize recording
     void initialize(System*);
+
     // Record data
     void record(System*);
+    void writeSummary(System*);
 
     // Mutators
     void setNPPaths(int n) { npPaths = n; }
     void setNGPaths(int n) { ngPaths = n; }
+    void setWriteDirectory(string d) { writeDirectory = d; }
 
     // Write data
-    void write(string);
+    void write();
     
   private:
     int npPaths, ngPaths; // Number of predictive and gradient agent paths to record
@@ -32,6 +35,12 @@ namespace Predictive {
     // Timers
     RealType recTimer;
     RealType recDelay;
+
+    // The command line supplied command
+    vector<string> command;
+
+    // The directory to record data in
+    string writeDirectory;
   };
 
 }

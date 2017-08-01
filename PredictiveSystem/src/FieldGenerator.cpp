@@ -17,9 +17,20 @@ namespace Predictive {
       G *= 0.5;
     }
   }
+
+  void FieldGenerator::createPeak(Field& field, RealType cx, RealType cy, RealType sigma, RealType vol) {
+    RealType c0 = 0.5/sqr(sigma);
+    RealType norm = 1./(sigma*sqrt(2*PI));
+    auto peak = [&] (vec2 pos) {
+      RealType x = pos.x, y = pos.y;
+      return (RealType)(norm*exp(-c0*(sqr(x-cx)+sqr(y-cy))));
+    };
+    field.set(peak);
+  }
   
   void FieldGenerator::createTwoPeaks(Field& field) {
-    RealType m0 = 50, m1 = 25;
+    //RealType m0 = 50, m1 = 25;
+    RealType m0 = 1, m1 = 0.5;
     RealType c0 = sqr(12), c1 = sqr(20);
     auto twoPeaks = [&] (vec2 pos) {
       RealType x = pos.x, y = pos.y;
@@ -30,6 +41,15 @@ namespace Predictive {
   
   void FieldGenerator::createUniform(Field& field, RealType value) {
     field.set(value);
+  }
+
+  void FieldGenerator::createSine(Field& field, RealType amp, int k) {
+    Bounds bounds = field.getBounds();
+    RealType width = bounds.right-bounds.left, height = bounds.top-bounds.bottom;
+    auto sine = [&] (vec2 pos) {
+      return amp*sin(PI*k*pos.x/width)*sin(PI*k*pos.y/height);
+    };
+    field.set(sine);
   }
 
   inline void FieldGenerator::addFrequency(int grainSize, RealType amp, Field& field) {

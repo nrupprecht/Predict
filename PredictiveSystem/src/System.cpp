@@ -2,14 +2,14 @@
 
 namespace Predictive {
 
-  System::System() : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(0.05), epsilon(0.001), time(1.), t_iter(0), idelay(0.005), temperature(0), data(nullptr), bounds(Bounds(0,1,0,1)) {
+  System::System() : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(0.05), epsilon(0.001), time(1.), t_iter(0), idelay(0.005), iIter(0), iPoints(0), fieldPoints(default_field_points), temperature(0), diffusion(1.), consumption(1.), data(nullptr), bounds(Bounds(0,1,0,1)) {
     radius = 0.05;
     viscosity = 1.308e-3; // Viscosity of water
     Dt = temperature/(6*viscosity*PI*radius);
     factor = sqrt(2*Dt*epsilon);
   };
   
-  System::System(DataRecord& dat) : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(0.05), epsilon(0.001), time(1.), t_iter(0), idelay(0.005), temperature(0), bounds(Bounds(0,1,0,1)) {
+  System::System(DataRecord& dat) : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(0.05), epsilon(0.001), time(1.), t_iter(0), idelay(0.005), iIter(0), iPoints(0), fieldPoints(default_field_points), temperature(0), diffusion(1.), consumption(1.), bounds(Bounds(0,1,0,1)) {
     radius = 0.05;
     viscosity = 1.308e-3; // Viscosity of water
     Dt = temperature/(6*viscosity*PI*radius);
@@ -19,7 +19,7 @@ namespace Predictive {
 
   System::~System() {};
 
-  void System::run(RealType rt) {
+  void System::run(RealType rt) {    
     // Set up
     initialize(rt);
     // Do the simulation
@@ -43,19 +43,25 @@ namespace Predictive {
     // Set times
     runTime = rt;
     t_max = runTime/epsilon;
+    time = 0;
+    // Compute iPoints, correct idelay
+    iPoints = static_cast<int>(runTime / idelay);
+    idelay = runTime/iPoints;
+    ++iPoints;
+    iIter = 0;
+    // Check for stability. If unstable, reduce timestep
+    if (diffusion*epsilon*sqr(fieldPoints) >= 0.25*0.5) epsilon = 0.25 * 0.5/(diffusion*sqr(fieldPoints));
     // Initialize fields
-    resource = new Field[t_max]; // Resource fields
-    diffField  = Field(bounds);  // Difference field
-    trajectory = VField(bounds); // Trajectory field
-    gradient   = VField(bounds); // Gradient field
+    resourceRec = new Field[iPoints]; // Recorded resource fields
+    resource   = Field(bounds, fieldPoints);  // Resource field
+    diffField  = Field(bounds, fieldPoints);  // Difference field
+    trajectory = VField(bounds, fieldPoints); // Trajectory field
+    gradient   = VField(bounds, fieldPoints); // Gradient field
     // Initialize resource fields
-    for (int i=0; i<t_max; ++i) resource[i] = Field(bounds);
+    for (int i=0; i<iPoints; ++i) resourceRec[i] = Field(bounds, fieldPoints);
     // Set the initial resource field
     FieldGenerator fieldGenerator;
-    //fieldGenerator.createTwoPeaks(resource[0]);
-    fieldGenerator.createSmoothNoise(resource[0]);
-    printToCSV("Field.csv", resource[0]); //**
-
+    fieldGenerator.createTwoPeaks(resourceRec[0]);
     // Initialize agents with random positions
     pAgents.resize(nPred);
     ipAgents.resize(nPred);
@@ -72,6 +78,10 @@ namespace Predictive {
     time = 0;
     itimer = 2*idelay; // Make itimer > idelay
     t_iter = 0;
+    // Reset resource
+    resource = resourceRec[0];
+    // Set trajectory fields
+    computeTrajectory();
     // Reset agents
     for (int i=0; i<nPred; ++i) pAgents.at(i) = ipAgents.at(i);
     for (int i=0; i<nGrad; ++i) gAgents.at(i) = igAgents.at(i);
@@ -84,10 +94,13 @@ namespace Predictive {
       // Consume resource
       consume();
       // Update resource (diffusion)
-      diffusion();
+      resourceDiffusion();
       // Possible update trajectory field
       if (itimer>=idelay) {
+	++iIter; // Increment beforehand so resourceRec[0] is never changed
 	computeTrajectory();
+	// Check, in case of rounding errors
+	if (iIter<iPoints) resourceRec[iIter] = resource; // Save the current resource
 	itimer = 0.;
       }
       // Record data
@@ -97,7 +110,9 @@ namespace Predictive {
       time   += epsilon;
       ++t_iter;
     }
-    
+
+    printToCSV("Field.csv",resourceRec[0]);
+    printToCSV("FieldEnd.csv", resource);
   }
 
   inline void System::updateAgents() {
@@ -109,7 +124,7 @@ namespace Predictive {
     for (auto &p : pAgents) {
       vec2 v = trajectory.get(p);
       normalize(v);
-      p += velocity*epsilon*v;
+      p += epsilon*velocity*v;
       if (temperature>0) p += epsilon*factor*randNormal()*randV();
       bounds.wrap(p);
     }
@@ -117,15 +132,16 @@ namespace Predictive {
     for (auto &g : gAgents) {
       vec2 v = gradient.get(g);
       normalize(v);
-      g += velocity*v;
+      g += epsilon*velocity*v;
+      if (temperature>0) g += epsilon*factor*randNormal()*randV();
       bounds.wrap(g);
     }
   }
 
   inline void System::consume() {
-
     // Update resource at the next temporal iteration based on the current field values - this means that everyone eats "at the same time"
-    
+    // Initialize resource to the resource of the current time step, then eat from it and diffuse the resulting resource
+    resbb = resource;
     // Predictive agents eat: bin agents so we have to access field data less
     
     for (auto p : pAgents) {
@@ -133,14 +149,15 @@ namespace Predictive {
     }
     // Gradient agents eat (note, as above, they are not actually eating "after" the predictive agents.
     for (auto g : gAgents) {
-      
+      resource.get(g) -= epsilon*consumption*resbb.get(g);
     }
   }
 
-  inline void System::diffusion() {
-    diffField.laplacian(resource[t_iter]);
+  inline void System::resourceDiffusion() {
+    // Calculate the laplacian of the resource
+    diffField.laplacian(resource);
     // Do diffusion
-    resource[t_iter].minusEq(diffField, epsilon);
+    resource.plusEq(diffField, diffusion*epsilon);
   }
 
   inline void System::computeTrajectory() {
@@ -149,7 +166,7 @@ namespace Predictive {
     }
     if (nGrad>0) {
       // Compute the gradient of the current resource, for the gradient agents' use
-      gradient.gradient(resource[t_iter]);
+      gradient.gradient(resource);
     }
   }
 
