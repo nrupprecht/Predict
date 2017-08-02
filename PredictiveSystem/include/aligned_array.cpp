@@ -161,6 +161,14 @@ template<typename T> T aligned_array<T>::operator[] (int i) const {
   return data[i];
 }
 
+template<typename T> T& aligned_array<T>::last() {
+  return data[_size-1];
+}
+
+template<typename T> T aligned_array<T>::last() const {
+  return data[_size-1];
+}
+
 template<typename T> void aligned_array<T>::setAlignment(int a) {
   if (a<0) throw bad_alignment(a);
   _alignment = a;
@@ -180,7 +188,7 @@ template<typename T> bool aligned_array<T>::iterator::operator!=(aligned_array<T
   return (_point!=p._point || _size!=p._size || data!=p.data);
 }
 
-template<typename T> aligned_array<T>::iterator& aligned_array<T>::iterator::operator++() {
+template<typename T> typename aligned_array<T>::iterator& aligned_array<T>::iterator::operator++() {
   ++_point;
   return *this;
 }

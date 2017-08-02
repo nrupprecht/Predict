@@ -2,48 +2,92 @@
 #include "System.hpp"
 
 namespace Predictive {
-  DataRecord::DataRecord(int argc, char** argv) : npPaths(10), ngPaths(10), recTimer(0), recDelay(1./15.) {
+  DataRecord::DataRecord(int argc, char** argv) : npPaths(10), ngPaths(10), recTimer(0), recDelay(1./15.), recPositions(true), recResource(true), totalResource(0) {
     for (int i=1; i<argc; ++i)
       command.push_back(argv[i]);
+    // Set the timers to have the current time
+    start_time = high_resolution_clock::now();
+    end_time = high_resolution_clock::now();
   };
 
   void DataRecord::initialize(System *system) {
     // Predictive agent tracking
-    int np = min(npPaths, system->nPred);
-    pPaths = vector<vector<vector<vec2> > >(system->sIters);
-    // Gradient agent tracking
-    int ng = min(ngPaths, system->nGrad);
-    gPaths = vector<vector<vector<vec2> > >(system->sIters);
+    if (recPositions) {
+      int np = min(npPaths, system->nPred);
+      pPaths = vector<vector<vector<vec2> > >(system->sIters);
+      // Gradient agent tracking
+      int ng = min(ngPaths, system->nGrad);
+      gPaths = vector<vector<vector<vec2> > >(system->sIters);
+    }
     // Create the directory
     mkdir(writeDirectory.c_str(), 0777);
+    // Record the total amount of resources
+    totalResource = system->resourceRec[0].total();
   }
 
   void DataRecord::record(System *system) {
-    if (recTimer>=recDelay) {
-      int s_iter = system->s_iter;
-      int np = min(npPaths, system->nPred);
-      int ng = min(ngPaths, system->nGrad);
+    // Find the current time
+    RealType time = system->time;
+    // Record data
+    if (recTimer>=recDelay || time==0) {
+      if (recPositions) {
+	// Get the solution iteration number and the number of agents to record
+	int s_iter = system->s_iter;
+	int np = min(npPaths, system->nPred);
+	int ng = min(ngPaths, system->nGrad);
+	
+	int t_iter = max(pPaths.at(s_iter).size(), gPaths.at(s_iter).size());
+	// Push a vector for this time step
+	if (np>0) {
+	  pPaths.at(s_iter).push_back(vector<vec2>(np));
+	  for (int i=0; i<np; ++i) {
+	    vec2 pos = system->pAgents.at(i);
+	    pPaths.at(s_iter).at(t_iter).at(i) = pos;
+	  }
+	}
+	if (ng>0) {
+	  gPaths.at(s_iter).push_back(vector<vec2>(ng));
+	  for (int i=0; i<ng; ++i) {
+	    vec2 pos = system->gAgents.at(i);
+	    gPaths.at(s_iter).at(t_iter).at(i) = pos;
+	  }
+	}
+      }
       
-      int t_iter = max(pPaths.at(s_iter).size(), gPaths.at(s_iter).size());
-      // Push a vector for this time step
-      if (np>0) {
-	pPaths.at(s_iter).push_back(vector<vec2>(np));
-	for (int i=0; i<np; ++i) {
-	  vec2 pos = system->pAgents.at(i);
-	  pPaths.at(s_iter).at(t_iter).at(i) = pos;
-	}
-      }
-      if (ng>0) {
-	gPaths.at(s_iter).push_back(vector<vec2>(ng));
-	for (int i=0; i<ng; ++i) {
-          vec2 pos = system->gAgents.at(i);
-          gPaths.at(s_iter).at(t_iter).at(i) = pos;
-	}
-      }
+      // Record resource
+      if (recResource) resourceRecord.push_back(system->resource);
+
+      // Update consumption records
+      pConsumptionRec.push_back(vec2(time, system->pConsumption));
+      gConsumptionRec.push_back(vec2(time, system->gConsumption));
+
       // Reset timer
       recTimer = 0;
     }
     recTimer += system->epsilon;
+  }
+
+  void DataRecord::endOfIteration(System* system) {
+    // Record the total consumption during the run
+    pCvS.push_back(system->pConsumption);
+    gCvS.push_back(system->gConsumption);
+    // Record consumption factors
+    int np = system->nPred, ng = system->nGrad;
+    int nt = np + ng;
+    pCF.push_back(system->pConsumption*nt/(totalResource*np));
+    gCF.push_back(system->gConsumption*nt/(totalResource*ng));
+  }
+
+  void DataRecord::start() {
+    start_time = high_resolution_clock::now();
+  }
+
+  void DataRecord::end() {
+    end_time = high_resolution_clock::now();
+  }
+
+  RealType DataRecord::getElapsedTime() {
+    return time_span(end_time, start_time);
   }
 
   void DataRecord::writeSummary(System* system) {
@@ -66,15 +110,33 @@ namespace Predictive {
     }
 
     fout << "Simulation and space:\n";
-    fout << "  - Number of Predictors:      " << system->getNPred() << "\n";
-    fout << "  - Number of Gradients:       " << system->getNGrad() << "\n";
-    fout << "  - Predictivity:              " << system->getTau() << "\n";
-    fout << "  - Agent velocity:            " << system->getVelocity() << "\n";
-    fout << "  - Time step:                 " << system->getEpsilon() << "\n";
-    fout << "  - Diffusion:                 " << system->getDiffusion() << "\n";
-    fout << "  - Field points:              " << system->getFieldPoints() << "\n";
-    fout << "  - Stability (<1 is good):    " << system->getDiffusion()*system->getEpsilon()*sqr(system->getFieldPoints())*2 << endl;
-
+    fout << "  - Simulated Time:            " << system->runTime << "\n";
+    fout << "  - Real Time:                 " << getElapsedTime() << " (" << printAsTime(getElapsedTime()) << ")\n";
+    fout << "  - Diffusion:                 " << system->diffusion << "\n";
+    fout << "\n";
+    fout << "Agents:\n";
+    fout << "  - Number of Predictors:      " << system->nPred << "\n";
+    fout << "  - Number of Gradients:       " << system->nGrad << "\n";
+    fout << "  - Predictivity (tau):        " << system->tau << "\n";
+    fout << "  - Agent velocity:            " << system->velocity << "\n";
+    fout << "  - Solution iterations:       " << system->sIters << "\n";
+    fout << "\n";
+    fout << "Integration and Discretization:\n";
+    fout << "  - Field points:              " << system->fieldPoints << "\n";
+    fout << "  - Stability (<1 is good):    " << system->diffusion*system->epsilon*sqr(system->fieldPoints)*2 << endl;
+    fout << "  - Time step:                 " << system->epsilon << "\n";
+    fout << "  - Time integration delay:    " << system->idelay << "\n";
+    fout << "  - Time integration points:   " << (system->iPoints-1) << "\n";
+    fout << "  - Average points per int.:   " << (system->iPoints-1) * system->tau << "\n";
+    fout << "\n";
+    fout << "Consumption:\n";
+    fout << "  - Ave. pred. consumption:    " << Average(pConsumptionRec).y << "\n";
+    fout << "  - Ave. grad. consumption:    " << Average(gConsumptionRec).y << "\n";
+    fout << "  - Max pred. consumption:     " << Max(pConsumptionRec) << "\n";
+    fout << "  - Max grad. consumption:     " << Max(gConsumptionRec) << "\n";
+    fout << "  - Ave pred. CF:              " << Average(pCF) << "\n";
+    fout << "  - Ave grad. CF:              " << Average(gCF) << "\n";
+    fout << "  - Ave resource consumed:     " << (Average(pConsumptionRec).y+Average(gConsumptionRec).y)/totalResource << "\n";
   }
 
   void DataRecord::write() {
@@ -83,6 +145,23 @@ namespace Predictive {
       printToDirectory(writeDirectory+"/PosP", "pos", pPaths.at(0));
     if (!gPaths.empty())
       printToDirectory(writeDirectory+"/PosG", "pos", gPaths.at(0));
+    // Print resource data
+    if (!resourceRecord.empty()) {
+      // Make a directory for the resource data
+      mkdir((writeDirectory+"/Resource").c_str(), 0777);
+      // Print the resource data
+      int i=0;
+      for (const auto& res : resourceRecord) {
+	printToCSV(writeDirectory+"/Resource/res"+toStr(i)+".csv", res);
+	++i;
+      }
+    }
+    // Print consumption vs time (during a single solution iteration) data
+    printToCSV(writeDirectory+"/pConsumption.csv", pConsumptionRec);
+    printToCSV(writeDirectory+"/gConsumption.csv", gConsumptionRec);
+    // Print consumption vs solution iteration data
+    printToCSV(writeDirectory+"/pCvS.csv", pCvS);
+    printToCSV(writeDirectory+"/gCvS.csv", gCvS);
   }
   
 }

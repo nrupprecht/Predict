@@ -10,6 +10,10 @@ namespace Predictive {
   
   // Default constants
   const int default_field_points = 50;
+  const RealType default_velocity = 1.;
+  const RealType default_temperature = 0;
+  const RealType default_diffusion = 0.01;
+  const RealType default_consumption = 1.;
   
   /*
    * @class System
@@ -59,6 +63,7 @@ namespace Predictive {
     inline void consume();
     inline void resourceDiffusion();
     inline void computeTrajectory();
+    inline RealType weight(RealType, RealType, RealType);
 
     // Constants (external parameters)
     int nPred, nGrad;
@@ -83,6 +88,7 @@ namespace Predictive {
     int fieldPoints;   // How many points we use in the fields
     // The resource at different time slices. The first (0-th) time slice is the initial resource - we never change this. The t_iter-th resource is the current resource. Resources after this are the *predicted* resource fields.
     Field *resourceRec;
+    aligned_array<RealType> timeStamps; // The times that the resource record refer to
     Field resource, resbb; // Resource and resource buffer
     // Field to calculate diffusion
     Field diffField;
@@ -100,6 +106,7 @@ namespace Predictive {
 
     DataRecord *data;
     friend class DataRecord;
+    RealType pConsumption, gConsumption; // Amount consumed by predictive and gradient agents
   };
 
 }

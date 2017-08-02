@@ -16,6 +16,10 @@ namespace Predictive {
     Field(const Bounds&);
     Field(const Bounds&, int);
 
+    // Calculus
+    vec2 grad(vec2);
+    vec2 grad(int, int);
+
     // Set this field to be the laplacian of another field
     void laplacian(const Field&);
   };

@@ -27,6 +27,7 @@ namespace Predictive {
   template<typename T> class FieldBase {
   public:
     FieldBase();
+    FieldBase(const FieldBase&);
     FieldBase(const Bounds&);
     FieldBase(const Bounds&, int);
     // Destructor
@@ -52,6 +53,8 @@ namespace Predictive {
     // Accessors
     int getNX() { return nx; }
     int getNY() { return ny; }
+    RealType getDX() { return dx; }
+    RealType getDY() { return dy; }
     Bounds getBounds() { return bounds; }
 
     // Mutators
@@ -77,19 +80,21 @@ namespace Predictive {
     // Arithmetic
     void minusEq(FieldBase<T>&, RealType=1., bool=false);
     void plusEq (FieldBase<T>&, RealType=1., bool=false);
+    T total() const;
 
     // Exception classes
     struct UnalignedPoints  {};
     struct UnalignedSpacing {};
 
     friend inline bool printToCSV(string filename, const FieldBase& field) {
+      // Open stream
       ofstream fout(filename);
       if (fout.fail()) return false;
-
+      // Print data
       for(int y=0; y<field.ny; ++y)
 	for(int x=0; x<field.nx; ++x)
 	  fout << toCSV(field.getPosition(x,y)) << "," << toCSV(field.at(x,y)) << "\n";
-      
+      // Close stream and return
       fout.close();
       return true;
     }

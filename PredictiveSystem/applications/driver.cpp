@@ -19,13 +19,17 @@ int main(int argc, char** argv) {
   int sIters           = 1;     // Solution iterations
   RealType epsilon     = 0.001; // Time step
   RealType tau         = 0.05;  // Predictivity
-  RealType velocity    = 0.1;   // Agent velocity
-  RealType temperature = 0;     // Temperature applies brownian perturbation to agents
-  RealType diffusion   = 0.1;  // Resource diffusion
+  RealType velocity    = -1.;   // Agent velocity
+  RealType temperature = -1.;   // Temperature applies brownian perturbation to agents
+  RealType diffusion   = -1.;   // Resource diffusion
+  RealType consumption = -1.;   // Agents' resource consumption
 
   int fieldPoints      = -1;
   int nPredPaths       = nPred;
   int nGradPaths       = nGrad;
+
+  bool recPositions    = true;
+  bool recResource     = true;
 
   string writeDirectory = "RunData"; // The directory we will create (or overwrite) to write data to
 
@@ -44,11 +48,15 @@ int main(int argc, char** argv) {
   parser.get("velocity", velocity);
   parser.get("temperature", temperature);
   parser.get("diffusion", diffusion);
+  parser.get("consumption", consumption);
 
   parser.get("fieldPoints", fieldPoints);
   parser.get("nPredPaths", nPredPaths);
-  parser.get("nPredPaths", nPredPaths);
+  parser.get("nGradPaths", nGradPaths);
   
+  parser.get("recPositions", recPositions);
+  parser.get("recResource", recResource);
+
   parser.get("writeDirectory", writeDirectory);
   // Make sure we didn't enter any illegal tokens (ones not listed above) on the command line
   try {
@@ -59,11 +67,12 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
-
   // Set parameters
   DataRecord data(argc, argv);
   data.setNPPaths(nPredPaths);
   data.setNGPaths(nPredPaths);
+  data.setRecPositions(recPositions);
+  data.setRecResource(recResource);
   data.setWriteDirectory(writeDirectory);
   System predictive(data);
   if (fieldPoints>0) predictive.setFieldPoints(fieldPoints);
@@ -72,10 +81,10 @@ int main(int argc, char** argv) {
   predictive.setSIters(sIters);
   predictive.setEpsilon(epsilon);
   predictive.setTau(tau);
-  predictive.setVelocity(velocity);
-  predictive.setTemperature(temperature);
-  predictive.setDiffusion(diffusion);
-
+  if (velocity>=0)    predictive.setVelocity(velocity);
+  if (temperature>=0) predictive.setTemperature(temperature);
+  if (diffusion>=0)   predictive.setDiffusion(diffusion);
+  if (consumption>=0) predictive.setConsumption(consumption);
   
   // Run system
   predictive.run(time);

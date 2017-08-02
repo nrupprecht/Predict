@@ -69,6 +69,8 @@ namespace Predictive {
     T  at(int) const;
     T& operator[] (int);
     T  operator[] (int) const;
+    T& last();
+    T last() const;
     
     // Get pointer
     T* getPtr() { return data; }

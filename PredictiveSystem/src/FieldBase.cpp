@@ -2,6 +2,18 @@
 
 template<typename T> FieldBase<T>::FieldBase() : dx(0), dy(0), idx(0), idy(0), nx(50), ny(50), wrap(true) {};
 
+template<typename T> FieldBase<T>::FieldBase(const FieldBase& f) : dx(f.dx), dy(f.dy), idx(f.idx), idy(f.idy), nx(f.nx), ny(f.ny), wrap(f.wrap) {
+  bounds = f.bounds;
+  // Resize the data array
+  if (nx*ny>0)
+    data.resize(nx*ny);
+  else data.reset();
+  // Copy values
+  for (int y=0; y<ny; ++y)
+    for (int x=0; x<nx; ++x)
+      at(x,y) = f.at(x,y);
+}
+
 template<typename T> FieldBase<T>::FieldBase(const Bounds& b) : bounds(b), nx(50), ny(50), wrap(true) {
   initialize();
 };
@@ -18,7 +30,9 @@ template<typename T> void FieldBase<T>::initialize() {
   dy = (bounds.top - bounds.bottom)/ny;
   idx = 1./dx; idy = 1./dy;
   // Resize the data array
-  data.resize(nx*ny);
+  if (nx*ny>0)
+    data.resize(nx*ny);
+  else data.reset();
 }
 
 template<typename T> void FieldBase<T>::set(std::function<RealType(vec2)> func) {
@@ -213,4 +227,13 @@ template<typename T> void FieldBase<T>::plusEq(FieldBase<T> &field, RealType mul
       at(x,y) += mult*field.at(x,y);
       if (limit && at(x,y)<0) at(x,y) = 0;
     }
+}
+
+template<typename T> T FieldBase<T>::total() const {
+  T total = T();
+  // Total up the amount of stuff in the field
+  for (int y=0; y<ny; ++y)
+    for (int x=0; x<nx; ++x)
+      total += at(x,y);
+  return bounds.volume()/static_cast<RealType>(nx*ny) * total;
 }

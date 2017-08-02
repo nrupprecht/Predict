@@ -56,6 +56,16 @@ namespace Predictive {
       v.x /= mag; v.y /= mag;
     }
   }
+
+  // Normalization function
+  inline vec2 normed(const vec2 v) {
+    RealType mag = sqrt(sqr(v));
+    vec2 V = v;
+    if (mag>0) {
+      V.x /= mag; V.y /= mag;
+    }
+    return V;
+  }
   
   // (not a reference so we can use lvalues)
   inline RealType length(const vec2 v) {
@@ -65,6 +75,14 @@ namespace Predictive {
   inline vec2 randV() {
     RealType angle = 2*PI*drand48();
     return vec2(cos(angle), sin(angle));
+  }
+
+  inline RealType Max(const vector<vec2>& lst) {
+    if (lst.empty()) return 0;
+    RealType max = lst.begin()->y;
+    for (const auto v : lst)
+      if (v.y > max) max = v.y;
+    return max;
   }
   
 }

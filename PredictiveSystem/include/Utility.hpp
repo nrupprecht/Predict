@@ -103,12 +103,26 @@ namespace Predictive {
     a = b; b = temp;
   }
 
-  template<typename T> inline T& Last(vector<T> lst) {
+  template<typename T> inline T& Last(vector<T>& lst) {
     return lst.at(lst.size()-1);
   }
 
+  template<typename T> inline T Average(const vector<T>& lst) {
+    T ave = T();
+    for (const auto &v : lst) ave += v;
+    return (1./lst.size())*ave;
+  }
+
+  template<typename T> inline T Max(const vector<T>& lst) {
+    if (lst.empty()) return T();
+    T v = *lst.begin();
+    for(const auto &v : lst) 
+      if (v>max) max = v;
+    return v;
+  }
+
   /// Get the current time
-  inline auto current_time() {
+  inline std::chrono::time_point<std::chrono::high_resolution_clock> current_time() {
     return high_resolution_clock::now();
   }
 
