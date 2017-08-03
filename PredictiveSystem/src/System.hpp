@@ -64,6 +64,7 @@ namespace Predictive {
     inline void consume();
     inline void resourceDiffusion();
     inline void computeTrajectory();
+    inline void predictiveTrajectory();
     inline RealType weight(RealType, RealType, RealType);
 
     // Constants (external parameters)
@@ -102,12 +103,13 @@ namespace Predictive {
     // Data
     aligned_array<vec2> pAgents, gAgents;   // Predictive and gradient agent positions
     aligned_array<vec2> ipAgents, igAgents; // Initial predictive and gradient agent positions
-    aligned_array<RealType> pAgentConsumption, gAgentConsumption; // Consumption records
     RealType weight(RealType, RealType);    // Weighing function - function of space and time
 
+    // Recording data
     DataRecord *data;
     friend class DataRecord;
-    RealType pConsumption, gConsumption; // Amount consumed by predictive and gradient agents
+    RealType pConsumption, gConsumption; // Amount consumed by predictive and gradient agentsc
+    vector<vector<vec2> > fieldDiff;
   };
 
 }

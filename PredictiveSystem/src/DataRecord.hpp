@@ -20,6 +20,7 @@ namespace Predictive {
 
     // Record data
     void record(System*);
+    void startOfIteration(System*);
     void endOfIteration(System*);
 
     // Timing
@@ -37,7 +38,7 @@ namespace Predictive {
 
     // Write data
     void writeSummary(System*, string="");
-    void write();
+    void write(System* = nullptr);
 
     // Get data
     RealType getAvePCF();
@@ -49,7 +50,7 @@ namespace Predictive {
     vector<vector<vector<vec2> > > pPaths; // [ s_iter ]  [ t_iter ] [ agent # ] (vec2)
     vector<vector<vector<vec2> > > gPaths; // [ s_iter ]  [ t_iter ] [ agent # ] (vec2)
     vector<Field> resourceRecord;          // What the resource looked like
-    vector<vec2> pConsumptionRec, gConsumptionRec; // Amount consumed vs time 
+    vector<vector<vec2> > pConsumptionRec, gConsumptionRec; // Amount consumed vs time 
     vector<RealType> pCvS, gCvS;           // Consumption vs solution iteration
     vector<RealType> pCF, gCF;             // Pred and Grad consumption factors
     RealType totalResource;                // The total amount of resource

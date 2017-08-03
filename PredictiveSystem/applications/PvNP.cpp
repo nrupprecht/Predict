@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
   int total = 5000;    // Total number of agents we will use
   int sIters = 10;     // Solution iterations to use
   int divisions = 20;  // Number of divisions
-  string writeDirectory = "RecData"; // Directory to write data to
+  string writeDirectory = "RecData"; // Base name of the directory to write data to
   bool print = false;  // Whether to print any output
   
   // Seed random

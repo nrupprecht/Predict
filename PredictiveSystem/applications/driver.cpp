@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
 
   bool recPositions    = false;
   bool recResource     = false;
+  bool rec             = false;
 
   string writeDirectory = "RunData"; // The directory we will create (or overwrite) to write data to
 
@@ -56,6 +57,7 @@ int main(int argc, char** argv) {
   
   parser.get("recPositions", recPositions);
   parser.get("recResource", recResource);
+  parser.get("rec", rec);
 
   parser.get("writeDirectory", writeDirectory);
   // Make sure we didn't enter any illegal tokens (ones not listed above) on the command line
@@ -73,6 +75,10 @@ int main(int argc, char** argv) {
   data.setNGPaths(nPredPaths);
   data.setRecPositions(recPositions);
   data.setRecResource(recResource);
+  if (rec) {
+    data.setRecPositions(true);
+    data.setRecResource(true);
+  }
   data.setWriteDirectory(writeDirectory);
   System predictive(data);
   if (fieldPoints>0)  predictive.setFieldPoints(fieldPoints);
@@ -91,7 +97,7 @@ int main(int argc, char** argv) {
   
   // Write data
   data.writeSummary(&predictive);
-  data.write();
+  data.write(&predictive);
 
   // End
   return 0;

@@ -92,11 +92,25 @@ namespace Predictive {
       if (f.dx!=g.dx || f.dy!=g.dy) throw UnalignedSpacing();
       if (f.bounds!=g.bounds) throw UnalignedBounds();
 
-      T diff();
+      T diff = T(0);
       for (int y=0; y<f.ny; ++y)
 	for (int x=0; x<f.nx; ++x)
 	  diff += sqr(f.at(x,y) - g.at(x,y));
       return f.bounds.volume()/static_cast<RealType>(f.nx*f.ny) * diff;
+    }
+
+    friend inline T compairProduct(const FieldBase& f, const FieldBase& g) {
+      if (f.nx!=g.nx || f.ny!=g.ny) throw UnalignedPoints();
+      if (f.dx!=g.dx || f.dy!=g.dy) throw UnalignedSpacing();
+      if (f.bounds!=g.bounds) throw UnalignedBounds();
+
+      T diff = T(0);
+      for (int y=0; y<f.ny; ++y)
+        for (int x=0; x<f.nx; ++x)
+	  diff += sqr(f.at(x,y) - g.at(x,y)) / (f.at(x,y)*g.at(x,y));
+      
+      return f.bounds.volume()/static_cast<RealType>(f.nx*f.ny) * sqrt(diff);
+      
     }
 
     friend inline bool printToCSV(string filename, const FieldBase& field) {

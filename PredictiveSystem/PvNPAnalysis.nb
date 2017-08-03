@@ -1,0 +1,593 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     20201,        584]
+NotebookOptionsPosition[     18608,        526]
+NotebookOutlinePosition[     18981,        543]
+CellTagsIndexPosition[     18938,        540]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"SetDirectory", "[", 
+   RowBox[{"NotebookDirectory", "[", "]"}], "]"}], ";"}]], "Input"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"pr", "[", 
+   RowBox[{"list_", ",", "c_"}], "]"}], ":=", 
+  RowBox[{"Table", "[", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"list", "\[LeftDoubleBracket]", "i", "\[RightDoubleBracket]"}], 
+     "\[LeftDoubleBracket]", "c", "\[RightDoubleBracket]"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"i", ",", "1", ",", 
+      RowBox[{"Length", "[", "list", "]"}]}], "}"}]}], "]"}]}]], "Input",
+ CellChangeTimes->{{3.710771000042945*^9, 3.710771028179194*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["Import data", "Section",
+ CellChangeTimes->{{3.710767730178022*^9, 3.710767734927594*^9}, 
+   3.710775175908635*^9}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Header", "=", "\"\<RecData_tau0.1\>\""}], ";"}]], "Input",
+ CellChangeTimes->{{3.710767740168899*^9, 3.710767756026721*^9}, {
+  3.7107751256850843`*^9, 3.710775125944713*^9}}],
+
+Cell[CellGroupData[{
+
+Cell["Get the number of files to expect", "Subsubsection",
+ CellChangeTimes->{{3.710775183395706*^9, 3.7107751940509157`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"numberF", "=", 
+   RowBox[{"Length", "[", 
+    RowBox[{"Import", "[", "Header", "]"}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.710767763312767*^9, 3.7107677765068207`*^9}, {
+  3.710770680519401*^9, 3.710770681995037*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Predictor data", "Subsubsection",
+ CellChangeTimes->{{3.710767789042725*^9, 3.710767790978191*^9}}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"predData", "=", 
+   RowBox[{"{", "}"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"For", "[", 
+  RowBox[{
+   RowBox[{"i", "=", "1"}], ",", 
+   RowBox[{"i", "\[LessEqual]", 
+    RowBox[{"numberF", "/", "2"}]}], ",", 
+   RowBox[{"++", "i"}], ",", 
+   RowBox[{"AppendTo", "[", 
+    RowBox[{"predData", ",", 
+     RowBox[{"Import", "[", 
+      RowBox[{"Header", "<>", "\"\</PCF\>\"", "<>", 
+       RowBox[{"ToString", "[", "i", "]"}], "<>", "\"\<.csv\>\""}], "]"}]}], 
+    "]"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.710767792747787*^9, 3.710767911951332*^9}, {
+  3.710770695406863*^9, 3.710770707412327*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"predLst", "=", 
+   RowBox[{"Table", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{
+         "predData", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+         "\[LeftDoubleBracket]", "j", "\[RightDoubleBracket]"}], 
+        "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], ",", 
+       FractionBox[
+        RowBox[{"Sum", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+            "predData", "\[LeftDoubleBracket]", "i", 
+             "\[RightDoubleBracket]"}], "\[LeftDoubleBracket]", "j", 
+            "\[RightDoubleBracket]"}], "\[LeftDoubleBracket]", "2", 
+           "\[RightDoubleBracket]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", 
+            RowBox[{"Length", "[", "predData", "]"}]}], "}"}]}], "]"}], 
+        RowBox[{"Length", "[", "predData", "]"}]]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"j", ",", "1", ",", 
+       RowBox[{"Length", "[", 
+        RowBox[{
+        "predData", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+        "]"}]}], "}"}]}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.710767936492837*^9, 3.7107680818104763`*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"predSig", "=", 
+   RowBox[{"Table", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{
+         "predData", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+         "\[LeftDoubleBracket]", "j", "\[RightDoubleBracket]"}], 
+        "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], ",", 
+       SuperscriptBox[
+        RowBox[{"(", 
+         FractionBox[
+          RowBox[{"Sum", "[", 
+           RowBox[{
+            SuperscriptBox[
+             RowBox[{"(", 
+              RowBox[{
+               RowBox[{
+                RowBox[{
+                 RowBox[{
+                 "predData", "\[LeftDoubleBracket]", "i", 
+                  "\[RightDoubleBracket]"}], "\[LeftDoubleBracket]", "j", 
+                 "\[RightDoubleBracket]"}], "\[LeftDoubleBracket]", "2", 
+                "\[RightDoubleBracket]"}], "-", 
+               RowBox[{
+                RowBox[{
+                "predLst", "\[LeftDoubleBracket]", "j", 
+                 "\[RightDoubleBracket]"}], "\[LeftDoubleBracket]", "2", 
+                "\[RightDoubleBracket]"}]}], ")"}], "2"], ",", 
+            RowBox[{"{", 
+             RowBox[{"i", ",", "1", ",", 
+              RowBox[{"Length", "[", "predData", "]"}]}], "}"}]}], "]"}], 
+          RowBox[{"Length", "[", "predData", "]"}]], ")"}], 
+        RowBox[{"1", "/", "2"}]]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"j", ",", "1", ",", 
+       RowBox[{"Length", "[", 
+        RowBox[{
+        "predData", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+        "]"}]}], "}"}]}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.710770811563299*^9, 3.710770828835299*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Gradient data", "Subsubsection",
+ CellChangeTimes->{{3.710767783770823*^9, 3.7107677863377447`*^9}}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"gradData", "=", 
+   RowBox[{"{", "}"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"For", "[", 
+  RowBox[{
+   RowBox[{"i", "=", "1"}], ",", 
+   RowBox[{"i", "\[LessEqual]", 
+    RowBox[{"numberF", "/", "2"}]}], ",", 
+   RowBox[{"++", "i"}], ",", 
+   RowBox[{"AppendTo", "[", 
+    RowBox[{"gradData", ",", 
+     RowBox[{"Import", "[", 
+      RowBox[{"Header", "<>", "\"\</GCF\>\"", "<>", 
+       RowBox[{"ToString", "[", "i", "]"}], "<>", "\"\<.csv\>\""}], "]"}]}], 
+    "]"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.710767924006956*^9, 3.710767929910137*^9}, {
+  3.710770702390955*^9, 3.710770705076363*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"gradLst", "=", 
+   RowBox[{"Table", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{
+         "gradData", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+         "\[LeftDoubleBracket]", "j", "\[RightDoubleBracket]"}], 
+        "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], ",", 
+       FractionBox[
+        RowBox[{"Sum", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+            "gradData", "\[LeftDoubleBracket]", "i", 
+             "\[RightDoubleBracket]"}], "\[LeftDoubleBracket]", "j", 
+            "\[RightDoubleBracket]"}], "\[LeftDoubleBracket]", "2", 
+           "\[RightDoubleBracket]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", 
+            RowBox[{"Length", "[", "gradData", "]"}]}], "}"}]}], "]"}], 
+        RowBox[{"Length", "[", "gradData", "]"}]]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"j", ",", "1", ",", 
+       RowBox[{"Length", "[", 
+        RowBox[{
+        "gradData", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+        "]"}]}], "}"}]}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.710767936492837*^9, 3.710768124193798*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"gradSig", "=", 
+   RowBox[{"Table", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{
+         "gradData", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+         "\[LeftDoubleBracket]", "j", "\[RightDoubleBracket]"}], 
+        "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], ",", 
+       SuperscriptBox[
+        RowBox[{"(", 
+         FractionBox[
+          RowBox[{"Sum", "[", 
+           RowBox[{
+            SuperscriptBox[
+             RowBox[{"(", 
+              RowBox[{
+               RowBox[{
+                RowBox[{
+                 RowBox[{
+                 "gradData", "\[LeftDoubleBracket]", "i", 
+                  "\[RightDoubleBracket]"}], "\[LeftDoubleBracket]", "j", 
+                 "\[RightDoubleBracket]"}], "\[LeftDoubleBracket]", "2", 
+                "\[RightDoubleBracket]"}], "-", 
+               RowBox[{
+                RowBox[{
+                "gradLst", "\[LeftDoubleBracket]", "j", 
+                 "\[RightDoubleBracket]"}], "\[LeftDoubleBracket]", "2", 
+                "\[RightDoubleBracket]"}]}], ")"}], "2"], ",", 
+            RowBox[{"{", 
+             RowBox[{"i", ",", "1", ",", 
+              RowBox[{"Length", "[", "gradData", "]"}]}], "}"}]}], "]"}], 
+          RowBox[{"Length", "[", "gradData", "]"}]], ")"}], 
+        RowBox[{"1", "/", "2"}]]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"j", ",", "1", ",", 
+       RowBox[{"Length", "[", 
+        RowBox[{
+        "gradData", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+        "]"}]}], "}"}]}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.7107707315166817`*^9, 3.710770790928565*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ListLinePlot", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"predLst", ",", "gradLst"}], "}"}], ",", 
+   RowBox[{"PlotStyle", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"Purple", ",", "Green"}], "}"}]}], ",", 
+   RowBox[{"ImageSize", "\[Rule]", "Large"}], ",", 
+   RowBox[{"AspectRatio", "\[Rule]", "1"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.710768069522685*^9, 3.710768076154978*^9}, {
+  3.710768127183208*^9, 3.7107681666435757`*^9}}],
+
+Cell[BoxData[
+ GraphicsBox[{{}, {{}, {}, 
+    {RGBColor[0.5, 0, 0.5], PointSize[0.016666666666666666`], 
+     AbsoluteThickness[1.6], LineBox[CompressedData["
+1:eJxTTMoPSmViYGCQBGIQDQGeDgzIoCEJlX8gD02+FJU/oRqV/6ABlf+hGZXP
+0I7KF+hC5Uv0ovEnoPIXTETla0xG5W+Ygsq3mIbKPzAdle8xE5V/YRYqP2IO
+Kv/OXFR+ynxUfsUCVL7NQlQ+wyJU/hEEHwBmvCCu
+      "]]}, 
+    {RGBColor[0, 1, 0], PointSize[0.016666666666666666`], AbsoluteThickness[
+     1.6], LineBox[CompressedData["
+1:eJxTTMoPSmViYGCQBGIQDQGeDgzIoCEJlX8gD02+FJU/oRqV/6ABlf+hGZXP
+0I7KF+hC5Uv0ovEnoPIXTETla0xG5W+Ygsq3mIbKPzAdle8xE5V/YRYqP2IO
+Kv/OXFR+ynxUfsUCVL7NQlQ+wyJU/hEEHwBmvCCu
+      "]]}}, {}},
+  AspectRatio->1,
+  Axes->{True, True},
+  AxesLabel->{None, None},
+  AxesOrigin->{0, 0},
+  DisplayFunction->Identity,
+  Frame->{{False, False}, {False, False}},
+  FrameLabel->{{None, None}, {None, None}},
+  FrameTicks->{{Automatic, Automatic}, {Automatic, Automatic}},
+  GridLines->{None, None},
+  GridLinesStyle->Directive[
+    GrayLevel[0.5, 0.4]],
+  ImageMargins->0.,
+  ImageSize->Large,
+  ImageSizeRaw->Automatic,
+  Method->{},
+  PlotRange->{{0, 2402.}, {-1., 1.}},
+  PlotRangeClipping->True,
+  PlotRangePadding->{{
+     Scaled[0.02], 
+     Scaled[0.02]}, {
+     Scaled[0.05], 
+     Scaled[0.05]}},
+  Ticks->{Automatic, Automatic}]], "Output",
+ CellChangeTimes->{
+  3.710768082852791*^9, 3.7107681305285597`*^9, {3.710768161010296*^9, 
+   3.7107681669757757`*^9}, 3.710770659401593*^9, 3.7107707119729433`*^9, 
+   3.710775280413314*^9}]
+}, Open  ]],
+
+Cell[BoxData[""], "Input",
+ CellChangeTimes->{{3.7107709582844048`*^9, 3.710770988017725*^9}, {
+  3.7107710299622602`*^9, 3.710771042370348*^9}, {3.7107711115289793`*^9, 
+  3.710771113097426*^9}, {3.710771159833355*^9, 3.71077118999219*^9}, {
+  3.710771234000124*^9, 3.710771236692205*^9}, {3.710771453959195*^9, 
+  3.710771477430469*^9}}],
+
+Cell[BoxData[
+ RowBox[{"Quiet", "[", 
+  RowBox[{"Needs", "[", "\"\<ErrorBarPlots`\>\"", "]"}], "]"}]], "Input",
+ CellChangeTimes->{{3.710772159069418*^9, 3.71077216567443*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Create predictor error plot data", "Subsubsection",
+ CellChangeTimes->{{3.710771495810936*^9, 3.7107715033379183`*^9}}],
+
+Cell[BoxData[{
+ RowBox[{"Clear", "[", "predCF", "]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"predCF", "=", 
+   RowBox[{"Partition", "[", 
+    RowBox[{
+     RowBox[{"Riffle", "[", 
+      RowBox[{
+       RowBox[{"pr", "[", 
+        RowBox[{"predLst", ",", "2"}], "]"}], ",", 
+       RowBox[{"pr", "[", 
+        RowBox[{"predSig", ",", "2"}], "]"}]}], "]"}], ",", "2"}], "]"}]}], 
+  ";"}]}], "Input",
+ CellChangeTimes->{{3.710771147329026*^9, 3.710771155652399*^9}, {
+  3.7107712246265306`*^9, 3.7107712277972517`*^9}, {3.71077129842859*^9, 
+  3.710771354893167*^9}, {3.710771404576318*^9, 3.710771404823457*^9}, {
+  3.710771474253373*^9, 3.710771483258196*^9}, {3.71077151993896*^9, 
+  3.7107715521343822`*^9}, {3.710771669830926*^9, 3.7107717010881567`*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Create gradient error plot data", "Subsubsection",
+ CellChangeTimes->{{3.710771513211049*^9, 3.710771517538513*^9}}],
+
+Cell[BoxData[{
+ RowBox[{"Clear", "[", "gradCF", "]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"gradCF", "=", 
+   RowBox[{"Partition", "[", 
+    RowBox[{
+     RowBox[{"Riffle", "[", 
+      RowBox[{
+       RowBox[{"pr", "[", 
+        RowBox[{"gradLst", ",", "2"}], "]"}], ",", 
+       RowBox[{"pr", "[", 
+        RowBox[{"gradSig", ",", "2"}], "]"}]}], "]"}], ",", "2"}], "]"}]}], 
+  ";"}]}], "Input",
+ CellChangeTimes->{{3.710771534213891*^9, 3.710771563544589*^9}, {
+  3.7107716649032793`*^9, 3.71077169484033*^9}}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Create graph", "Subsubsection",
+ CellChangeTimes->{{3.710771525410652*^9, 3.710771529578849*^9}, {
+  3.71077166591544*^9, 3.710771666538265*^9}}],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"ts", "=", 
+   RowBox[{"Table", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"i", ",", 
+       RowBox[{
+        RowBox[{
+        "gradLst", "\[LeftDoubleBracket]", "i", "\[RightDoubleBracket]"}], 
+        "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}]}], "}"}], ",", 
+     
+     RowBox[{"{", 
+      RowBox[{"i", ",", "1", ",", 
+       RowBox[{"Length", "[", "gradLst", "]"}], ",", "4"}], "}"}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"tickSpecs", "=", 
+   RowBox[{"{", 
+    RowBox[{"ts", ",", "Automatic"}], "}"}]}], ";"}]}], "Input",
+ CellChangeTimes->{{3.7107716866375437`*^9, 3.710771691084642*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ErrorListPlot", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"predCF", ",", "gradCF"}], "}"}], ",", 
+   RowBox[{"Joined", "\[Rule]", "True"}], ",", 
+   RowBox[{"Frame", "\[Rule]", "True"}], ",", 
+   RowBox[{"FrameTicks", "\[Rule]", "tickSpecs"}], ",", 
+   RowBox[{"PlotRange", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"0.75", ",", "1.08"}], "}"}]}], ",", 
+   RowBox[{"FrameLabel", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"Style", "[", 
+       RowBox[{"\"\<Predictive Agents\>\"", ",", "12", ",", 
+        RowBox[{"FontFamily", "\[Rule]", "\"\<Arial\>\""}]}], "]"}], ",", 
+      RowBox[{"Style", "[", 
+       RowBox[{"\"\<Consumption Factor\>\"", ",", "12", ",", 
+        RowBox[{"FontFamily", "\[Rule]", "\"\<Arial\>\""}]}], "]"}]}], 
+     "}"}]}], ",", 
+   RowBox[{"PlotStyle", "\[Rule]", 
+    RowBox[{"{", 
+     RowBox[{"Purple", ",", "Green"}], "}"}]}], ",", 
+   RowBox[{"ImageSize", "\[Rule]", "Large"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.71077091118388*^9, 3.7107709250079403`*^9}, {
+  3.710770989767893*^9, 3.7107709901207447`*^9}, {3.710771089552127*^9, 
+  3.710771105317301*^9}, {3.710771144934414*^9, 3.710771145386182*^9}, {
+  3.710771177437372*^9, 3.7107711944809713`*^9}, {3.710771259170143*^9, 
+  3.7107712776773043`*^9}, {3.710771391421707*^9, 3.7107714707063913`*^9}, {
+  3.7107715685440397`*^9, 3.710771651695942*^9}}],
+
+Cell[BoxData[
+ GraphicsBox[{{}, {
+    {RGBColor[0.5, 0, 0.5], PointSize[0.016666666666666666`], 
+     AbsoluteThickness[1.6], LineBox[CompressedData["
+1:eJxdx8sKQFAUheGdkaGBAWWAJOl0cr+MeAaPoIy9ukdASu3/r9XqS/ZzOxwR
+CZ+9/3Utols1XdiDfTiAIziGUziDc7iAS9jAFq7gGm7gFu7gHh7gEZ7g+fcN
+YwYMmw==
+      
+      "]], {{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, \
+{}, {}, {}, {}, {}, {}, {}, {}, {}}}, 
+    {RGBColor[0, 1, 0], PointSize[0.016666666666666666`], AbsoluteThickness[
+     1.6], LineBox[CompressedData["
+1:eJxdx8sKQFAUheGdkaGBAWWAJOl0cr+MeAaPoIy9ukdASu3/r9XqS/ZzOxwR
+CZ+9/3Utols1XdiDfTiAIziGUziDc7iAS9jAFq7gGm7gFu7gHh7gEZ7g+fcN
+YwYMmw==
+      
+      "]], {{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, \
+{}, {}, {}, {}, {}, {}, {}, {}, {}}}}, {}},
+  AspectRatio->NCache[GoldenRatio^(-1), 0.6180339887498948],
+  Axes->{True, True},
+  AxesLabel->{None, None},
+  AxesOrigin->{0, 0.75165},
+  DisplayFunction->Identity,
+  Frame->{{True, True}, {True, True}},
+  FrameLabel->{{
+     FormBox[
+      StyleBox[
+      "\"Consumption Factor\"", 12, FontFamily -> "Arial", StripOnInput -> 
+       False], TraditionalForm], None}, {
+     FormBox[
+      StyleBox[
+      "\"Predictive Agents\"", 12, FontFamily -> "Arial", StripOnInput -> 
+       False], TraditionalForm], None}},
+  FrameTicks->{{Automatic, Automatic}, {{{1, 
+       FormBox["50", TraditionalForm]}, {5, 
+       FormBox["441", TraditionalForm]}, {9, 
+       FormBox["834", TraditionalForm]}, {13, 
+       FormBox["1226", TraditionalForm]}, {17, 
+       FormBox["1618", TraditionalForm]}, {21, 
+       FormBox["2009", TraditionalForm]}, {25, 
+       FormBox["2402", TraditionalForm]}}, {{1, 
+       FormBox["50", TraditionalForm]}, {5, 
+       FormBox["441", TraditionalForm]}, {9, 
+       FormBox["834", TraditionalForm]}, {13, 
+       FormBox["1226", TraditionalForm]}, {17, 
+       FormBox["1618", TraditionalForm]}, {21, 
+       FormBox["2009", TraditionalForm]}, {25, 
+       FormBox["2402", TraditionalForm]}}}},
+  GridLines->{None, None},
+  GridLinesStyle->Directive[
+    GrayLevel[0.5, 0.4]],
+  ImageSize->Large,
+  Method->{},
+  PlotRange->{{0, 25.}, {0.75, 1.08}},
+  PlotRangeClipping->True,
+  PlotRangePadding->{{
+     Scaled[0.02], 
+     Scaled[0.02]}, {0, 0}},
+  Ticks->{Automatic, Automatic}]], "Output",
+ CellChangeTimes->{
+  3.7107709904165*^9, {3.710771035874908*^9, 3.710771116413085*^9}, {
+   3.7107711573680353`*^9, 3.710771194930595*^9}, {3.71077123890788*^9, 
+   3.710771278148692*^9}, 3.710771323956357*^9, 3.710771358617494*^9, {
+   3.710771392704562*^9, 3.710771471104288*^9}, {3.7107715731792383`*^9, 
+   3.710771581890623*^9}, {3.710771612312455*^9, 3.710771692366487*^9}, 
+   3.710775280575973*^9}]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+Evaluator->"Local",
+WindowSize->{808, 651},
+WindowMargins->{{13, Automatic}, {Automatic, 0}},
+FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (June 27, \
+2014)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 123, 3, 28, "Input"],
+Cell[684, 25, 479, 12, 28, "Input"],
+Cell[CellGroupData[{
+Cell[1188, 41, 122, 2, 64, "Section"],
+Cell[1313, 45, 210, 4, 28, "Input"],
+Cell[CellGroupData[{
+Cell[1548, 53, 126, 1, 35, "Subsubsection"],
+Cell[1677, 56, 264, 6, 28, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[1978, 67, 105, 1, 35, "Subsubsection"],
+Cell[2086, 70, 646, 17, 63, "Input"],
+Cell[2735, 89, 1254, 33, 80, "Input"],
+Cell[3992, 124, 1710, 44, 134, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[5739, 173, 106, 1, 35, "Subsubsection"],
+Cell[5848, 176, 646, 17, 63, "Input"],
+Cell[6497, 195, 1252, 33, 80, "Input"],
+Cell[7752, 230, 1712, 44, 134, "Input"],
+Cell[CellGroupData[{
+Cell[9489, 278, 466, 11, 46, "Input"],
+Cell[9958, 291, 1473, 40, 580, "Output"]
+}, Open  ]],
+Cell[11446, 334, 339, 5, 28, "Input"],
+Cell[11788, 341, 176, 3, 28, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[12001, 349, 125, 1, 35, "Subsubsection"],
+Cell[12129, 352, 764, 17, 46, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[12930, 374, 122, 1, 35, "Subsubsection"],
+Cell[13055, 377, 520, 14, 46, "Input"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[13612, 396, 151, 2, 35, "Subsubsection"],
+Cell[13766, 400, 678, 20, 46, "Input"],
+Cell[CellGroupData[{
+Cell[14469, 424, 1386, 30, 97, "Input"],
+Cell[15858, 456, 2710, 65, 398, "Output"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

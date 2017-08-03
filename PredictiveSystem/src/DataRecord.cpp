@@ -58,13 +58,21 @@ namespace Predictive {
       if (recResource) resourceRecord.push_back(system->resource);
 
       // Update consumption records
-      pConsumptionRec.push_back(vec2(time, system->pConsumption));
-      gConsumptionRec.push_back(vec2(time, system->gConsumption));
+      if (system->nPred>0) Last(pConsumptionRec).push_back(vec2(time, system->pConsumption));
+      if (system->nGrad>0) Last(gConsumptionRec).push_back(vec2(time, system->gConsumption));
 
       // Reset timer
       recTimer = 0;
     }
     recTimer += system->epsilon;
+  }
+
+  void DataRecord::startOfIteration(System* system) {
+    // Check for a valid system
+    if (system==nullptr) return;
+    // Push new record vectors
+    if (system->nPred>0) pConsumptionRec.push_back(vector<vec2>());
+    if (system->nGrad>0) gConsumptionRec.push_back(vector<vec2>());
   }
 
   void DataRecord::endOfIteration(System* system) {
@@ -109,6 +117,9 @@ namespace Predictive {
   }
 
   void DataRecord::writeSummary(System* system, string label) {
+    // Check that system is non-null
+    if (system==nullptr) return;
+    // Open a file
     std::ofstream fout;
     if (label=="") fout.open(writeDirectory+"/run_summary.txt");
     else fout.open(writeDirectory+"_"+label+"/run_summary.txt");
@@ -134,6 +145,7 @@ namespace Predictive {
     fout << "Simulation and space:\n";
     fout << "  - Simulated Time:            " << system->runTime << "\n";
     fout << "  - Real Time:                 " << getElapsedTime() << " (" << printAsTime(getElapsedTime()) << ")\n";
+    fout << "  - Time per solution iter.:   " << getElapsedTime() / system->sIters << "\n";
     fout << "  - Diffusion:                 " << system->diffusion << "\n";
     fout << "\n";
     fout << "Agents:\n";
@@ -141,6 +153,7 @@ namespace Predictive {
     fout << "  - Number of Gradients:       " << system->nGrad << "\n";
     fout << "  - Predictivity (tau):        " << system->tau << "\n";
     fout << "  - Agent velocity:            " << system->velocity << "\n";
+    fout << "  - Agent consumption rate:    " << system->consumption << "\n";
     fout << "  - Solution iterations:       " << system->sIters << "\n";
     fout << "\n";
     fout << "Integration and Discretization:\n";
@@ -152,18 +165,18 @@ namespace Predictive {
     fout << "  - Average points per int.:   " << (system->iPoints-1) * system->tau << "\n";
     fout << "\n";
     fout << "Consumption:\n";
-    if (hasP) fout << "  - Ave. pred. consumption:    " << Average(pConsumptionRec).y << "\n";
-    if (hasG) fout << "  - Ave. grad. consumption:    " << Average(gConsumptionRec).y << "\n";
-    if (hasP) fout << "  - Max pred. consumption:     " << Max(pConsumptionRec) << "\n";
-    if (hasG) fout << "  - Max grad. consumption:     " << Max(gConsumptionRec) << "\n";
+    // if (hasP) fout << "  - Ave. pred. consumption:    " << Average(pConsumptionRec).y << "\n";
+    // if (hasG) fout << "  - Ave. grad. consumption:    " << Average(gConsumptionRec).y << "\n";
+    // if (hasP) fout << "  - Max pred. consumption:     " << Max(pConsumptionRec) << "\n";
+    // if (hasG) fout << "  - Max grad. consumption:     " << Max(gConsumptionRec) << "\n";
     if (hasP) fout << "  - Ave pred. CF:              " << Average(pCF) << "\n";
     if (hasG) fout << "  - Ave grad. CF:              " << Average(gCF) << "\n";
     if (hasP) fout << "  - Max pred. CF:              " << Max(pCF) << "\n";
     if (hasG) fout << "  - Max grad. CF:              " << Max(gCF) << "\n";
-    fout << "  - Ave resource consumed:     " << (Average(pConsumptionRec).y+Average(gConsumptionRec).y)/totalResource << "\n";
+    // fout << "  - Ave resource consumed:     " << (Average(pConsumptionRec).y+Average(gConsumptionRec).y)/totalResource << "\n";
   }
 
-  void DataRecord::write() {
+  void DataRecord::write(System* system) {
     // Print position data
     if (!pPaths.empty())
       printToDirectory(writeDirectory+"/PosP", "pos", pPaths.at(0));
@@ -180,12 +193,39 @@ namespace Predictive {
 	++i;
       }
     }
+
     // Print consumption vs time (during a single solution iteration) data
-    printToCSV(writeDirectory+"/pConsumption.csv", pConsumptionRec);
-    printToCSV(writeDirectory+"/gConsumption.csv", gConsumptionRec);
+    if (!pConsumptionRec.empty()) {
+      mkdir((writeDirectory+"/pConsumption").c_str(), 0777);
+      int i=0;
+      for (const auto &pc : pConsumptionRec) {
+	printToCSV(writeDirectory+"/pConsumption/pCon"+toStr(i)+".csv", pc);
+	++i;
+      }
+    }
+    if (!gConsumptionRec.empty()) {
+      mkdir((writeDirectory+"/gConsumption").c_str(), 0777);
+      int i = 0;
+      for (const auto &gc : gConsumptionRec) {
+	printToCSV(writeDirectory+"/gConsumption/gCon"+toStr(i)+".csv", gc);
+	++i;
+      }
+    }
+
     // Print consumption vs solution iteration data
     printToCSV(writeDirectory+"/pCvS.csv", pCF);
     printToCSV(writeDirectory+"/gCvS.csv", gCF);
+    // Print field difference data
+    if (system && !system->fieldDiff.empty()) {
+      // Make a directory for the field data
+      mkdir((writeDirectory+"/FieldDiff").c_str(), 0777);
+      // Print the field difference data
+      int i=0;
+      for (const auto& df : system->fieldDiff) {
+	printToCSV(writeDirectory+"/FieldDiff/fd"+toStr(i)+".csv", df);
+	++i;
+      }
+    }
   }
 
   RealType DataRecord::getAvePCF() {
