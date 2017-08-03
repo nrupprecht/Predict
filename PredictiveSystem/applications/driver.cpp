@@ -11,12 +11,11 @@
 using namespace Predictive;
 
 int main(int argc, char** argv) {
-
   // Parameters
   RealType time        = 1.;    // Simulated time
-  int nPred            = 500;   // Number of predictive agents
+  int nPred            = 5000;  // Number of predictive agents
   int nGrad            = 0;     // Number of gradient agents
-  int sIters           = 1;     // Solution iterations
+  int sIters           = -1;    // Solution iterations
   RealType epsilon     = 0.001; // Time step
   RealType tau         = 0.05;  // Predictivity
   RealType velocity    = -1.;   // Agent velocity
@@ -28,13 +27,14 @@ int main(int argc, char** argv) {
   int nPredPaths       = nPred;
   int nGradPaths       = nGrad;
 
-  bool recPositions    = true;
-  bool recResource     = true;
+  bool recPositions    = false;
+  bool recResource     = false;
 
   string writeDirectory = "RunData"; // The directory we will create (or overwrite) to write data to
 
   // Seed random
-  srand48( std::time( NULL ) );
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  srand48( seed );
   seedNormalDistribution();
 
   // Parse arguments
@@ -75,12 +75,12 @@ int main(int argc, char** argv) {
   data.setRecResource(recResource);
   data.setWriteDirectory(writeDirectory);
   System predictive(data);
-  if (fieldPoints>0) predictive.setFieldPoints(fieldPoints);
-  predictive.setNPred(nPred);
-  predictive.setNGrad(nGrad);
-  predictive.setSIters(sIters);
-  predictive.setEpsilon(epsilon);
-  predictive.setTau(tau);
+  if (fieldPoints>0)  predictive.setFieldPoints(fieldPoints);
+  if (nPred>=0)       predictive.setNPred(nPred);
+  if (nGrad>=0)       predictive.setNGrad(nGrad);
+  if (sIters>0)       predictive.setSIters(sIters);
+  if (epsilon>0)      predictive.setEpsilon(epsilon);
+  if (tau>=0)         predictive.setTau(tau);
   if (velocity>=0)    predictive.setVelocity(velocity);
   if (temperature>=0) predictive.setTemperature(temperature);
   if (diffusion>=0)   predictive.setDiffusion(diffusion);
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
   
   // Run system
   predictive.run(time);
-
+  
   // Write data
   data.writeSummary(&predictive);
   data.write();

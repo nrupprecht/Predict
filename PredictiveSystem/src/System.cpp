@@ -41,6 +41,12 @@ namespace Predictive {
     Dt = temperature/(6*viscosity*PI*radius);
     factor = sqrt(2*Dt*epsilon);
   }
+
+  void System::clear() {
+    pConsumption = 0;
+    gConsumption = 0;
+    if (data) data->clear();
+  }
   
   inline void System::initialize(RealType rt) {
     // Set times

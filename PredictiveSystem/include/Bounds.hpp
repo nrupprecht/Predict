@@ -51,6 +51,10 @@ namespace Predictive {
     bool operator==(const Bounds& b) const {
       return b.left==left && b.right==right && b.bottom==bottom && b.top==top;
     }
+
+    bool operator!=(const Bounds& b) const {
+      return b.left!=left || b.right!=right || b.bottom!=bottom && b.top!=top;
+    }
     
     bool contains(const vec2 position) const {
       return position.x<=right && left<=position.x && position.y<=top && bottom<=position.y;

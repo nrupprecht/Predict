@@ -115,10 +115,10 @@ namespace Predictive {
 
   template<typename T> inline T Max(const vector<T>& lst) {
     if (lst.empty()) return T();
-    T v = *lst.begin();
+    T mx = *lst.begin();
     for(const auto &v : lst) 
-      if (v>max) max = v;
-    return v;
+      if (v>mx) mx = v;
+    return mx;
   }
 
   /// Get the current time

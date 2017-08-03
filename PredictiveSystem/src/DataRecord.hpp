@@ -33,12 +33,18 @@ namespace Predictive {
     void setWriteDirectory(string d) { writeDirectory = d; }
     void setRecPositions(bool r) { recPositions = r; }
     void setRecResource(bool r) { recResource = r; }
+    void clear();
 
     // Write data
-    void writeSummary(System*);
+    void writeSummary(System*, string="");
     void write();
+
+    // Get data
+    RealType getAvePCF();
+    RealType getAveGCF();
     
   private:
+    // Data storage
     int npPaths, ngPaths; // Number of predictive and gradient agent paths to record
     vector<vector<vector<vec2> > > pPaths; // [ s_iter ]  [ t_iter ] [ agent # ] (vec2)
     vector<vector<vector<vec2> > > gPaths; // [ s_iter ]  [ t_iter ] [ agent # ] (vec2)

@@ -68,14 +68,18 @@ namespace Predictive {
   }
 
   void DataRecord::endOfIteration(System* system) {
+    // Check for a valid system
+    if (system==nullptr) return;
     // Record the total consumption during the run
     pCvS.push_back(system->pConsumption);
     gCvS.push_back(system->gConsumption);
     // Record consumption factors
     int np = system->nPred, ng = system->nGrad;
     int nt = np + ng;
-    pCF.push_back(system->pConsumption*nt/(totalResource*np));
-    gCF.push_back(system->gConsumption*nt/(totalResource*ng));
+    if (np>0) pCF.push_back(system->pConsumption*nt/(totalResource*np));
+    else pCF.push_back(0);
+    if (ng>0) gCF.push_back(system->gConsumption*nt/(totalResource*ng));
+    else gCF.push_back(0);
   }
 
   void DataRecord::start() {
@@ -90,13 +94,31 @@ namespace Predictive {
     return time_span(end_time, start_time);
   }
 
-  void DataRecord::writeSummary(System* system) {
-    std::ofstream fout(writeDirectory+"/run_summary.txt");
+  void DataRecord::clear() {
+    npPaths = ngPaths = 0;
+    pPaths.clear();
+    gPaths.clear();
+    resourceRecord.clear();
+    pConsumptionRec.clear();
+    gConsumptionRec.clear();
+    pCvS.clear();
+    gCvS.clear();
+    pCF.clear();
+    gCF.clear();
+    totalResource = 0;
+  }
+
+  void DataRecord::writeSummary(System* system, string label) {
+    std::ofstream fout;
+    if (label=="") fout.open(writeDirectory+"/run_summary.txt");
+    else fout.open(writeDirectory+"_"+label+"/run_summary.txt");
     if (fout.fail()) {
       // Write error message
       std::cerr << "Failed to open file [" << writeDirectory << "/run_summary.txt]." << endl;
       return;
     }
+    // Set some booleans
+    bool hasP = (system->nPred>0), hasG = (system->nGrad>0);
     // Print Header
     fout << "**********          SUMMARY          **********\n";
     fout << "********* Predictive System Simulator *********\n";
@@ -130,12 +152,14 @@ namespace Predictive {
     fout << "  - Average points per int.:   " << (system->iPoints-1) * system->tau << "\n";
     fout << "\n";
     fout << "Consumption:\n";
-    fout << "  - Ave. pred. consumption:    " << Average(pConsumptionRec).y << "\n";
-    fout << "  - Ave. grad. consumption:    " << Average(gConsumptionRec).y << "\n";
-    fout << "  - Max pred. consumption:     " << Max(pConsumptionRec) << "\n";
-    fout << "  - Max grad. consumption:     " << Max(gConsumptionRec) << "\n";
-    fout << "  - Ave pred. CF:              " << Average(pCF) << "\n";
-    fout << "  - Ave grad. CF:              " << Average(gCF) << "\n";
+    if (hasP) fout << "  - Ave. pred. consumption:    " << Average(pConsumptionRec).y << "\n";
+    if (hasG) fout << "  - Ave. grad. consumption:    " << Average(gConsumptionRec).y << "\n";
+    if (hasP) fout << "  - Max pred. consumption:     " << Max(pConsumptionRec) << "\n";
+    if (hasG) fout << "  - Max grad. consumption:     " << Max(gConsumptionRec) << "\n";
+    if (hasP) fout << "  - Ave pred. CF:              " << Average(pCF) << "\n";
+    if (hasG) fout << "  - Ave grad. CF:              " << Average(gCF) << "\n";
+    if (hasP) fout << "  - Max pred. CF:              " << Max(pCF) << "\n";
+    if (hasG) fout << "  - Max grad. CF:              " << Max(gCF) << "\n";
     fout << "  - Ave resource consumed:     " << (Average(pConsumptionRec).y+Average(gConsumptionRec).y)/totalResource << "\n";
   }
 
@@ -160,8 +184,16 @@ namespace Predictive {
     printToCSV(writeDirectory+"/pConsumption.csv", pConsumptionRec);
     printToCSV(writeDirectory+"/gConsumption.csv", gConsumptionRec);
     // Print consumption vs solution iteration data
-    printToCSV(writeDirectory+"/pCvS.csv", pCvS);
-    printToCSV(writeDirectory+"/gCvS.csv", gCvS);
+    printToCSV(writeDirectory+"/pCvS.csv", pCF);
+    printToCSV(writeDirectory+"/gCvS.csv", gCF);
+  }
+
+  RealType DataRecord::getAvePCF() {
+    return Average(pCF);
+  }
+
+  RealType DataRecord::getAveGCF() {
+    return Average(gCF);
   }
   
 }

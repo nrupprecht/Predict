@@ -28,10 +28,13 @@ SRC_OBJECTS = build/Field.o build/System.o build/Field.o build/VField.o build/ve
 
 ALL_OBJECTS = $(SRC_OBJECTS)
 
-all: bin/driver
+all: bin/driver bin/PvNP
 
 ###### Executables #####
 bin/driver: build/driver.o $(ALL_OBJECTS)
+	$(CC) $^ -o $@
+
+bin/PvNP: build/PvNP.o $(ALL_OBJECTS)
 	$(CC) $^ -o $@
 
 #####   Objects   #####

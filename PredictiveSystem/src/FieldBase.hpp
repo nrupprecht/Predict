@@ -77,7 +77,7 @@ namespace Predictive {
     T DY2(int, int) const;
     T Lap(int, int) const;
     
-    // Arithmetic
+    // Math functions
     void minusEq(FieldBase<T>&, RealType=1., bool=false);
     void plusEq (FieldBase<T>&, RealType=1., bool=false);
     T total() const;
@@ -85,6 +85,19 @@ namespace Predictive {
     // Exception classes
     struct UnalignedPoints  {};
     struct UnalignedSpacing {};
+    struct UnalignedBounds  {};
+
+    friend inline T innerProduct(const FieldBase& f, const FieldBase& g) {
+      if (f.nx!=g.nx || f.ny!=g.ny) throw UnalignedPoints();
+      if (f.dx!=g.dx || f.dy!=g.dy) throw UnalignedSpacing();
+      if (f.bounds!=g.bounds) throw UnalignedBounds();
+
+      T diff();
+      for (int y=0; y<f.ny; ++y)
+	for (int x=0; x<f.nx; ++x)
+	  diff += sqr(f.at(x,y) - g.at(x,y));
+      return f.bounds.volume()/static_cast<RealType>(f.nx*f.ny) * diff;
+    }
 
     friend inline bool printToCSV(string filename, const FieldBase& field) {
       // Open stream

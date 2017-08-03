@@ -221,6 +221,7 @@ template<typename T> void FieldBase<T>::minusEq(FieldBase<T> &field, RealType mu
 template<typename T> void FieldBase<T>::plusEq(FieldBase<T> &field, RealType mult, bool limit) {
   if (nx!=field.nx || ny!=field.ny) throw UnalignedPoints();
   if (dx!=field.dx || dy!=field.dy) throw UnalignedSpacing();
+  if (bounds!=field.bounds) throw UnalignedBounds();
   // Do subtraction
   for (int y=0; y<ny; ++y)
     for (int x=0; x<nx; ++x) {

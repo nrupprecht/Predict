@@ -54,6 +54,7 @@ namespace Predictive {
     void setDiffusion(RealType d) { diffusion = d; }
     void setConsumption(RealType c) { consumption = c; }
     void setFieldPoints(int n)  { fieldPoints = n; }
+    void clear(); // Clear all recorded data
     
   private:
     // Private helper functions
