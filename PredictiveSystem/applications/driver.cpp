@@ -22,7 +22,9 @@ int main(int argc, char** argv) {
   RealType temperature = -1.;   // Temperature applies brownian perturbation to agents
   RealType diffusion   = -1.;   // Resource diffusion
   RealType consumption = -1.;   // Agents' resource consumption
+  bool noiseResource   = false; // Use a smooth noise resource
 
+  RealType idelay      = -1;
   int fieldPoints      = -1;
   int nPredPaths       = nPred;
   int nGradPaths       = nGrad;
@@ -50,7 +52,9 @@ int main(int argc, char** argv) {
   parser.get("temperature", temperature);
   parser.get("diffusion", diffusion);
   parser.get("consumption", consumption);
+  parser.get("noiseResource", noiseResource);
 
+  parser.get("idelay", idelay);
   parser.get("fieldPoints", fieldPoints);
   parser.get("nPredPaths", nPredPaths);
   parser.get("nGradPaths", nGradPaths);
@@ -81,6 +85,8 @@ int main(int argc, char** argv) {
   }
   data.setWriteDirectory(writeDirectory);
   System predictive(data);
+  if (noiseResource)  predictive.setResource(NOISE);
+  if (idelay>=0)      predictive.setIDelay(idelay);
   if (fieldPoints>0)  predictive.setFieldPoints(fieldPoints);
   if (nPred>=0)       predictive.setNPred(nPred);
   if (nGrad>=0)       predictive.setNGrad(nGrad);

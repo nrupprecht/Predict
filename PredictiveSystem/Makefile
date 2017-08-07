@@ -5,9 +5,9 @@ ICC = icpc
 GCSTD = -std=c++11
 ICSTD = -std=c++14
 # Optimization for gcc and intel
-ICCOPTFLAGS = -xHost -O3 -no-prec-div -static -fp-model fast=2 -restrict -funroll-loops -no-inline-max-size
+ICCOPTFLAGS = -xHost -O3 -no-prec-div -static -restrict -funroll-loops -no-inline-max-size
 GCCOPTFLAGS = -O3 -static -funroll-loops -ffast-math -ffinite-math-only -freciprocal-math -ftree-vectorize -flto
-# -vectorize-slp -mllvm -bb-vectorize-aligned-only -fslp-vectorize-aggressive -fstrict-vtable-pointers -fwhole-program-vtables
+# -fp-model fast=2
 
 # Compilation for gcc or intel
 ICOMP = $(ICC) $(ICSTD) -g $(ICCOPTFLAGS)
@@ -28,13 +28,16 @@ SRC_OBJECTS = build/Field.o build/System.o build/Field.o build/VField.o build/ve
 
 ALL_OBJECTS = $(SRC_OBJECTS)
 
-all: bin/driver bin/PvNP
+all: bin/driver bin/PvNP bin/CFvsTau
 
 ###### Executables #####
 bin/driver: build/driver.o $(ALL_OBJECTS)
 	$(CC) $^ -o $@
 
 bin/PvNP: build/PvNP.o $(ALL_OBJECTS)
+	$(CC) $^ -o $@
+
+bin/CFvsTau: build/CFvsTau.o $(ALL_OBJECTS)
 	$(CC) $^ -o $@
 
 #####   Objects   #####

@@ -83,6 +83,11 @@ template<typename T> T FieldBase<T>::at(int x, int y) const {
   return data.at(nx*y + x);
 }
 
+template<typename T> int FieldBase<T>::getBin(vec2 pos) const {
+  double X = (pos.x-bounds.left)*idx, Y = (pos.y-bounds.bottom)*idy;
+  return nx*static_cast<int>(Y) + static_cast<int>(X);
+}
+
 template<typename T> void FieldBase<T>::setNX(int n) {
   nx = n;
   initialize();

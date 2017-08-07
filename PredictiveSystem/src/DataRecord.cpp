@@ -39,17 +39,21 @@ namespace Predictive {
 	int t_iter = max(pPaths.at(s_iter).size(), gPaths.at(s_iter).size());
 	// Push a vector for this time step
 	if (np>0) {
-	  pPaths.at(s_iter).push_back(vector<vec2>(np));
+	  // pPaths.at(s_iter).push_back(vector<vec2>(np));
+	  pPaths.at(0).push_back(vector<vec2>(np));
 	  for (int i=0; i<np; ++i) {
 	    vec2 pos = system->pAgents.at(i);
-	    pPaths.at(s_iter).at(t_iter).at(i) = pos;
+	    // pPaths.at(s_iter).at(t_iter).at(i) = pos;
+	    Last(pPaths.at(0)).at(i) = pos;
 	  }
 	}
 	if (ng>0) {
-	  gPaths.at(s_iter).push_back(vector<vec2>(ng));
+	  // gPaths.at(s_iter).push_back(vector<vec2>(ng));
+	  gPaths.at(0).push_back(vector<vec2>(ng));
 	  for (int i=0; i<ng; ++i) {
 	    vec2 pos = system->gAgents.at(i);
-	    gPaths.at(s_iter).at(t_iter).at(i) = pos;
+	    // gPaths.at(s_iter).at(t_iter).at(i) = pos;
+	    Last(gPaths.at(0)).at(i) = pos;
 	  }
 	}
       }
@@ -147,6 +151,7 @@ namespace Predictive {
     fout << "  - Real Time:                 " << getElapsedTime() << " (" << printAsTime(getElapsedTime()) << ")\n";
     fout << "  - Time per solution iter.:   " << getElapsedTime() / system->sIters << "\n";
     fout << "  - Diffusion:                 " << system->diffusion << "\n";
+    fout << "  - Total resources:           " << totalResource << "\n";
     fout << "\n";
     fout << "Agents:\n";
     fout << "  - Number of Predictors:      " << system->nPred << "\n";
@@ -160,23 +165,31 @@ namespace Predictive {
     fout << "  - Field points:              " << system->fieldPoints << "\n";
     fout << "  - Stability (<1 is good):    " << system->diffusion*system->epsilon*sqr(system->fieldPoints)*2 << endl;
     fout << "  - Time step:                 " << system->epsilon << "\n";
+    fout << "  - Iterations:                " << system->t_iter << "\n";
     fout << "  - Time integration delay:    " << system->idelay << "\n";
     fout << "  - Time integration points:   " << (system->iPoints-1) << "\n";
     fout << "  - Average points per int.:   " << (system->iPoints-1) * system->tau << "\n";
     fout << "\n";
     fout << "Consumption:\n";
-    // if (hasP) fout << "  - Ave. pred. consumption:    " << Average(pConsumptionRec).y << "\n";
-    // if (hasG) fout << "  - Ave. grad. consumption:    " << Average(gConsumptionRec).y << "\n";
-    // if (hasP) fout << "  - Max pred. consumption:     " << Max(pConsumptionRec) << "\n";
-    // if (hasG) fout << "  - Max grad. consumption:     " << Max(gConsumptionRec) << "\n";
-    if (hasP) fout << "  - Ave pred. CF:              " << Average(pCF) << "\n";
-    if (hasG) fout << "  - Ave grad. CF:              " << Average(gCF) << "\n";
+    RealType aveP = Average(pCF), aveG = Average(gCF);
+    if (hasP) fout << "  - Ave pred. CF:              " << aveP << "\n";
+    if (hasG) fout << "  - Ave grad. CF:              " << aveG << "\n";
     if (hasP) fout << "  - Max pred. CF:              " << Max(pCF) << "\n";
     if (hasG) fout << "  - Max grad. CF:              " << Max(gCF) << "\n";
-    // fout << "  - Ave resource consumed:     " << (Average(pConsumptionRec).y+Average(gConsumptionRec).y)/totalResource << "\n";
+    if (hasP) fout << "  - Initial pred. CF:          " << pCF.at(0) << "\n";
+    if (hasG) fout << "  - Initial grad. CF:          " << gCF.at(0) << "\n";
+    if (hasP) fout << "  - Pred. CF diff:             " << aveP - pCF.at(0) << "\n";
+    if (hasG) fout << "  - Grad. CF diff:             " << aveG - gCF.at(0) << "\n";
   }
 
   void DataRecord::write(System* system) {
+
+    /*
+    int i=0;
+    for (const auto path& : pPaths)
+      printToDirectory(writeDirectory+"/PosP/SI"+toStr(i), "pos", pPaths.at(i));
+    */	
+
     // Print position data
     if (!pPaths.empty())
       printToDirectory(writeDirectory+"/PosP", "pos", pPaths.at(0));
@@ -234,6 +247,14 @@ namespace Predictive {
 
   RealType DataRecord::getAveGCF() {
     return Average(gCF);
+  }
+
+  RealType DataRecord::getPDiff() {
+    return Average(pCF) - pCF.at(0);
+  }
+
+  RealType DataRecord::getGDiff() {
+    return Average(gCF) - gCF.at(0);
   }
   
 }

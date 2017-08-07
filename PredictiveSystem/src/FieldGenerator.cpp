@@ -2,19 +2,23 @@
 
 namespace Predictive {
 
-  // **** TODO: MAKE THIS BETTER ****
-  void FieldGenerator::createSmoothNoise(Field& field, RealType mult) {
-    int grains=4, maxGrain=16;
+  void FieldGenerator::createSmoothNoise(Field& field, int frequencies, RealType mult) {
+
+    frequencies = 1; //**
+    mult=0.2;
+
     // Reset field
     field.set(0.);
-    
-    int min = 4; // Minimum grain size
-    int G = maxGrain;
-    double amp = 1000;
-    for (int i=0; i<grains && G>=min; ++i) {
-      addFrequency(G, amp, field);
+    // Set starting constants
+    RealType maxWave = 0.25;
+    RealType amp = 1000, wavelength = maxWave;
+    // Superimpose different frequencies of noise
+    for (int i=0; i<frequencies; ++i) {
+      // Add a frequency
+      addFrequency(wavelength, amp, field);
+      // Adjust noise parameters
       amp *= mult;
-      G *= 0.5;
+      wavelength *= 0.5;
     }
   }
 
@@ -28,13 +32,13 @@ namespace Predictive {
     field.set(peak);
   }
   
-  void FieldGenerator::createTwoPeaks(Field& field) {
+  void FieldGenerator::createTwoPeaks(Field& field, RealType mult) {
     //RealType m0 = 50, m1 = 25;
     RealType m0 = 1, m1 = 0.5;
     RealType c0 = sqr(12), c1 = sqr(20);
     auto twoPeaks = [&] (vec2 pos) {
       RealType x = pos.x, y = pos.y;
-      return (RealType)(m0*exp(-c0*sqr(x-0.5)-c0*sqr(y-0.5)) + m1*exp(-c1*sqr(x-0.25)-c1*sqr(y-0.5)));
+      return mult*(RealType)(m0*exp(-c0*sqr(x-0.5)-c0*sqr(y-0.5)) + m1*exp(-c1*sqr(x-0.25)-c1*sqr(y-0.5)));
     };
     field.set(twoPeaks);
   }
@@ -52,47 +56,56 @@ namespace Predictive {
     field.set(sine);
   }
 
-  inline void FieldGenerator::addFrequency(int grainSize, RealType amp, Field& field) {
-    int dX = field.getNX(), dY = field.getNY();
-    int W = dX/grainSize, H = dY/grainSize;
-    RealType *D = new RealType[W*H];
-    RealType *array = new RealType[dX*dY];
+  inline void FieldGenerator::addFrequency(RealType length, RealType amp, Field& field) {
+    // Get values
+    int nx = field.getNX(), ny = field.getNY();
+    Bounds b = field.getBounds();
+    int px = b.width()/length, py = b.height()/length;
+    RealType dx = b.width()/nx, dy = b.height()/ny; // Field spacing
+    // Allocate array for the major points
+    RealType *points = new RealType[px*py];
+    // Randomly translate where the origin is
+    int transX = static_cast<int>(drand48()*px);
+    int transY = static_cast<int>(drand48()*py);
+    // Lambda for accessing/setting [points]
+    auto at = [&] (int x, int y) -> RealType& {
+      x %= px; y %= py;
+      return points[px*y + x];
+    };
+    // Set value of major points, we will interpolate between them
+    for (int y=0; y<py; ++y)    
+      for (int x=0; x<px; ++x)
+	at(x,y) = amp*drand48();
+    // Add values
+    for (int y=0; y<ny; ++y)
+      for (int x=0; x<nx; ++x) {
+	// Which major point is left and below 
+	int X = static_cast<int>(x*dx/length);
+	int Y = static_cast<int>(y*dy/length);
+	// Distance (fraction of) between the left / below major point and the field location
+	RealType DX = x*dx/length - X; // static_cast<int>(x*dx/length);
+	RealType DY = y*dy/length - Y; // static_cast<int>(y*dy/length);
 
-    // Translate where the grid points are
-    int transX = static_cast<int>(drand48()*dX);
-    int transY = static_cast<int>(drand48()*dY);
-    // Set random points, we will smoothly interpolate between these
-    for(int x=0; x<W; x++)
-      for (int y=0; y<H; y++)
-	D[x+y*H] = amp*drand48();
-    
-    // Interpolate
-    for(int x=0; x<dX; x++)
-      for (int y=0; y<dY; y++) {
-	int X = (x+transX)%dX, Y = (y+transY)%dY;
-	if (x%grainSize==0 && y%grainSize==0)
-	  array[X+Y*dX] = D[(x/grainSize)+(y/grainSize)*H];
-	else { // Wrapped b.c.
-	  int aX = x/grainSize, bX = (aX+1)%W;
-	  int aY = y/grainSize, bY = (aY+1)%H;
-	  RealType TL = D[aX+aY*H], TR = D[bX+aY*H];
-	  RealType BL = D[aX+bY*H], BR = D[bX+bY*H];
-	  RealType dy = (RealType)y/grainSize - y/grainSize;
-	  RealType dx = (RealType)x/grainSize - x/grainSize;
-	  array[X+Y*dX] = interpolate(TL, TR, BL, BR, dx, dy);
-	}
+	X += transX; Y += transY;
+
+	// Get the four values, for interpolatoin
+	RealType TL = at(X, Y+1), TR = at(X+1, Y+1);
+	RealType BL = at(X, Y),   BR = at(X+1, Y);
+	// Add the (interpolated) value to the field
+	field.at(x,y) += interpolate(BL, BR, TL, TR, DX, DY);
+	/* Linear interpolation
+	RealType Left = (TL-BL)*DY+BL, Right = (TR-BR)*DY+BR;
+	RealType value = (Right-Left)*DX + Left;
+	*/
       }
-    for (int x=0; x<dX; x++)
-      for (int y=0; y<dY; y++)
-	field.at(x,y) += array[y*dX+x];
-    delete [] D;
-    delete [] array;
+	
+    delete [] points;
+    return;
   }
 
-  inline RealType FieldGenerator::cosineInterpolate(RealType a, RealType b, RealType x) {
-    float ft = x*PI;
-    float f = (1 - cos(ft)) * 0.5;
-    return a * (1 - f) + b * f;
+  inline RealType FieldGenerator::cosineInterpolate(RealType l, RealType r, RealType x) {
+    float f = 0.5*(1 - cos(PI*x));
+    return l * (1 - f) + r * f;
   }
 
   inline double FieldGenerator::interpolate(RealType TL, RealType TR, RealType BL, RealType BR, RealType dx, RealType dy) {

@@ -16,4 +16,4 @@ driver: driver.o $(files)
 
 .PHONY: clean
 clean:
-	rm *.o $(targets)
+	rm -f *.o $(targets)

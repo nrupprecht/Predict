@@ -43,6 +43,8 @@ namespace Predictive {
     // Get data
     RealType getAvePCF();
     RealType getAveGCF();
+    RealType getPDiff();
+    RealType getGDiff();
     
   private:
     // Data storage

@@ -2,19 +2,23 @@
 
 namespace Predictive {
 
-  System::System() : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(0.05), epsilon(0.001), velocity(default_velocity), time(1.), t_iter(0), idelay(0.005), iIter(0), iPoints(0), fieldPoints(default_field_points), temperature(default_temperature), diffusion(default_diffusion), consumption(default_consumption), data(nullptr), bounds(Bounds(0,1,0,1)), pConsumption(0), gConsumption(0) {
+  System::System() : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(default_tau), epsilon(default_epsilon), velocity(default_velocity), time(1.), t_iter(0), idelay(0.005), iIter(0), iPoints(0), fieldPoints(default_field_points), resourceRec(nullptr), resType(TWOPEAKS), temperature(default_temperature), diffusion(default_diffusion), consumption(default_consumption), data(nullptr), bounds(Bounds(0,1,0,1)), pConsumption(0), gConsumption(0) {
     radius = 0.05;
     viscosity = 1.308e-3; // Viscosity of water
     Dt = temperature/(6*viscosity*PI*radius);
     factor = sqrt(2*Dt*epsilon);
+    // Set weight function
+    wght = invRSqr;
   };
   
-  System::System(DataRecord& dat) : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(0.05), epsilon(0.001), velocity(default_velocity), time(1.), t_iter(0), idelay(0.005), iIter(0), iPoints(0), fieldPoints(default_field_points), temperature(default_temperature), diffusion(default_diffusion), consumption(default_consumption), bounds(Bounds(0,1,0,1)), pConsumption(0), gConsumption(0) {
+  System::System(DataRecord& dat) : nPred(5000), nGrad(0), sIters(25), s_iter(0), tau(default_tau), epsilon(default_epsilon), velocity(default_velocity), time(1.), t_iter(0), idelay(0.005), iIter(0), iPoints(0), fieldPoints(default_field_points), resourceRec(nullptr), resType(TWOPEAKS), temperature(default_temperature), diffusion(default_diffusion), consumption(default_consumption), bounds(Bounds(0,1,0,1)), pConsumption(0), gConsumption(0) {
     radius = 0.05;
     viscosity = 1.308e-3; // Viscosity of water
     Dt = temperature/(6*viscosity*PI*radius);
     factor = sqrt(2*Dt*epsilon);
     data = &dat;
+    // Set weight function
+    wght = invRSqr;
   }
 
   System::~System() {};
@@ -28,7 +32,6 @@ namespace Predictive {
       if (data) data->startOfIteration(this);
       singleIteration();
       if (data) data->endOfIteration(this);
-      
     }
     if (data) data->end();
   }
@@ -58,7 +61,12 @@ namespace Predictive {
     // Check for stability. If unstable, reduce timestep
     if (diffusion*epsilon*sqr(fieldPoints) >= 0.25*0.5) epsilon = 0.25 * 0.5/(diffusion*sqr(fieldPoints));
     // Compute iPoints, correct idelay
-    iPoints = static_cast<int>(runTime / idelay);
+    if (idelay>0) {
+      iPoints = static_cast<int>(runTime / idelay);
+      iPoints = min(iPoints, static_cast<int>(runTime/epsilon));
+    }
+    else iPoints = runTime/epsilon;
+    // Correct idelay
     idelay = runTime/iPoints;
     ++iPoints;
 
@@ -71,7 +79,15 @@ namespace Predictive {
     // Set the initial resource field
     FieldGenerator fieldGenerator;
     resourceRec[0] = Field(bounds, fieldPoints);
-    fieldGenerator.createTwoPeaks(resourceRec[0]);
+    switch (resType) {
+    default:
+    case TWOPEAKS:
+      fieldGenerator.createTwoPeaks(resourceRec[0], 10000);
+      break;
+    case NOISE:
+      fieldGenerator.createSmoothNoise(resourceRec[0]);
+      break;
+    }
     // Allocate time stamps
     timeStamps.resize(iPoints);
     // Initialize resource fields - do simple diffusion
@@ -183,20 +199,29 @@ namespace Predictive {
     // Initialize resource to the resource of the current time step, then eat from it and diffuse the resulting resource
     resbb = resource;
     RealType area = resource.getDX()*resource.getDY();
-    for (auto p : pAgents) {      
-      RealType amount = epsilon*consumption*resbb.get(p);
-      resource.get(p) -= amount; 
-      pConsumption    += amount * area; // Since the total volume eaten is y*area      
-    }
 
-    if (pConsumption<0) throw false;
+    // Binned eating method
+   int nx = resource.getNX(), ny = resource.getNY();
+    vector<int> bins(nx*ny, 0);
+    for (auto p : pAgents) ++bins.at( resource.getBin(p) );
+    for (int y=0; y<nx; ++y)
+      for (int x=0; x<nx; ++x) {
+	RealType amount = epsilon * (bins.at(nx*y+x)*consumption*resbb.at(x,y));
+	resource.at(x,y) -= amount;
+	pConsumption += amount * area;
+      }
 
     // Gradient agents eat (note, as above, they are not actually eating "after" the predictive agents.
-    for (auto g : gAgents) {
-      RealType amount = epsilon*consumption*resbb.get(g);
-      resource.get(g) -= amount;
-      gConsumption    += amount * area;
-    }
+
+    // Binned eating method
+    bins = vector<int>(nx*ny, 0);
+    for (auto g : gAgents) ++bins.at( resource.getBin(g) );
+    for (int y=0; y<nx;++y)
+      for (int x=0; x<nx; ++x) {
+	RealType amount = epsilon * (bins.at(nx*y+x)*consumption*resbb.at(x,y));
+	resource.at(x,y) -= amount;
+	gConsumption += amount * area;
+      }
   }
 
   inline void System::resourceDiffusion() {
@@ -209,75 +234,14 @@ namespace Predictive {
   }
 
   inline void System::computeTrajectory() {
-    if (nPred>0) {
+    if (0<nPred) {
       // For the first solution iteration, act like gradient agents
-      if (s_iter==0) {
-	trajectory.gradient(resource);
-      }
-      else {
-	predictiveTrajectory();
-	/*
-	// Compute the trajectory field for predictive agents
-	// Find first slice to look at
-	int iMin = 0, iMax = iPoints-1;
-	for (int i=0; i<iPoints; ++i) {
-	  if (time <= timeStamps.at(i)      && iMin==0) iMin = i;
-	  if (time + tau < timeStamps.at(i) && iMax==iPoints-1) iMax = i;
-	}
-	if (time>timeStamps.last()) iMin = iPoints-1;
-	// Tau = 0 results in iMax = iMin + 1, we want iMin==iMax
-	if (tau==0) iMin = iMax = 0;
-	// Look locally for current time step
-	for (int y=0; y<fieldPoints; ++y)
-	for (int x=0; x<fieldPoints; ++x) {
-	    // Look at points in space that we could get to going at our velocity
-	    RealType dxs = sqr(resource.getDX()); // We have set dx==dy, so there isn't a problem here
-	    vec2 value = Zero;
-	    // Calculate for the four points around you (up, down, left, right)
-	    value += weight(dxs, 0, resource.at(x+1,y)) * vec2(1,0);
-	    value += weight(dxs, 0, resource.at(x-1,y)) * vec2(-1,0);
-	    value += weight(dxs, 0, resource.at(x,y+1)) * vec2(0,1);
-	    value += weight(dxs, 0, resource.at(x,y-1)) * vec2(0,-1);
-	    trajectory.at(x,y) = value; // This is the same as reseting trajectory, then starting to add
-	  }
-	  
-	// Calculate trajectory based on future resource projection
-	RealType diff = resource.getDX(); // We have set dx==dy so there isn't a problem here
-	if (iMin!=iMax)
-	  for (int y=0; y<fieldPoints; ++y)
-	    for (int x=0; x<fieldPoints; ++x) {
-	    // Look ahead the appropriate number of iterations
-	      for (int iter=iMin; iter<iMax; ++iter) {
-	      // Get dt
-		RealType dt = timeStamps.at(iter) - time;
-		// Look at points in space that we could get to going at our velocity
-	      RealType radius = velocity*dt;
-	      // Don't double count points
-	      int cut = min(fieldPoints/2, static_cast<int>(ceil(radius/diff)));
-	      cut = max(1, cut);
-	      vec2 value = Zero;	     	    	      
-	      for (int px=-cut; px<=cut; ++px)
-		for (int py=-cut; py<=cut; ++py) {
-		  int ds = sqr(px)+sqr(py);
-		  if (ds<=cut && ds!=0) {
-		  RealType dxs = ds*sqr(diff);
-		    RealType res = resourceRec[iter].at(x+px, y+py);
-		    vec2 norm(px, py);
-		    normalize(norm);
-		    value += weight(dxs, dt, res)*norm;
-		    }
-		    }	      
-		    trajectory.at(x,y) += value;
-		    }
-		    }
-		    // Done calculating trajectory for predictive agents
-		    }
-	*/
-      }
-      if (nGrad>0) {
-	// Compute the gradient of the current resource, for the gradient agents' use
-	gradient.gradient(resource);
-      }
+      if (s_iter==0) trajectory.gradient(resource);
+      else predictiveTrajectory();
+    }
+    if (nGrad>0) {
+      // Compute the gradient of the current resource, for the gradient agents' use
+      gradient.gradient(resource);
     }
   }
 
@@ -300,10 +264,11 @@ namespace Predictive {
 	RealType dxs = sqr(resource.getDX()); // We have set dx==dy, so there isn't a problem here
 	vec2 value = Zero;
 	// Calculate for the four points around you (up, down, left, right)
-	value += weight(dxs, 0, resource.at(x+1,y)) * vec2(1,0);
-	value += weight(dxs, 0, resource.at(x-1,y)) * vec2(-1,0);
-	value += weight(dxs, 0, resource.at(x,y+1)) * vec2(0,1);
-	value += weight(dxs, 0, resource.at(x,y-1)) * vec2(0,-1);
+	RealType weight = wght(dxs, 0);
+	value += weight*resource.at(x+1,y)*vec2(1,0);
+	value += weight*resource.at(x-1,y)*vec2(-1,0);
+	value += weight*resource.at(x,y+1)*vec2(0,1);
+	value += weight*resource.at(x,y-1)*vec2(0,-1);
 	trajectory.at(x,y) = value; // This is the same as reseting trajectory, then starting to add
       }
     }
@@ -331,7 +296,7 @@ namespace Predictive {
 		  RealType res = resourceRec[iter].at(x+px, y+py);
 		  vec2 norm(px, py);
 		  normalize(norm);
-		  value += weight(dxs, dt, res)*norm;
+		  value += wght(dxs, dt)*res*norm;
 		}
 	      }
 	    trajectory.at(x,y) += value;
@@ -342,11 +307,5 @@ namespace Predictive {
     // Done calculating trajectory for predictive agents
   }
 
-  // Pass in the square of the spatial distance, the time, and the amount of resource at the considered point
-  inline RealType System::weight(RealType dxs, RealType dt, RealType res) {
-    // Inverse R^2
-    return res/(dxs+sqr(dt));
-  }
-  
 }
 

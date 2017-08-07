@@ -51,11 +51,12 @@ namespace Predictive {
     T& get(vec2);
 
     // Accessors
-    int getNX() { return nx; }
-    int getNY() { return ny; }
-    RealType getDX() { return dx; }
-    RealType getDY() { return dy; }
-    Bounds getBounds() { return bounds; }
+    int getNX() const { return nx; }
+    int getNY() const { return ny; }
+    RealType getDX() const { return dx; }
+    RealType getDY() const { return dy; }
+    Bounds getBounds() const { return bounds; }
+    int getBin(vec2) const;
 
     // Mutators
     void setNX(int);

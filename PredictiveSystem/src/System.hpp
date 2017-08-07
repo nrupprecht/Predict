@@ -14,7 +14,25 @@ namespace Predictive {
   const RealType default_temperature = 0;
   const RealType default_diffusion = 0.01;
   const RealType default_consumption = 1.;
+  const RealType default_tau = 0.05;
+  const RealType default_epsilon = 0.001;
   
+  // Weight functions
+  inline RealType invRSqr(RealType dxs, RealType dt) {
+    return 1./(dxs+sqr(dt));
+  }
+
+  inline RealType contant(RealType, RealType) {
+    return 1.;
+  }
+
+  inline RealType exponential(RealType dsx, RealType dt) {
+    return exp(-sqrt(dsx)-dt);
+  }
+
+  // Types of resources we could start with
+  enum ResType { TWOPEAKS, NOISE };
+
   /*
    * @class System
    * The class that runs predictive simulations
@@ -44,16 +62,18 @@ namespace Predictive {
     int getFieldPoints() { return fieldPoints; }
 
     // Mutators
-    void setNPred(int n)        { nPred = max(0,n); }
-    void setNGrad(int n)        { nGrad = max(0,n); }
-    void setSIters(int s)       { sIters = max(0,s); }
+    void setNPred(int n)         { nPred = max(0,n); }
+    void setNGrad(int n)         { nGrad = max(0,n); }
+    void setSIters(int s)        { sIters = max(0,s); }
     void setEpsilon(RealType e);
-    void setTau(RealType t)     { tau = fabs(t); }
+    void setTau(RealType t)      { tau = fabs(t); }
     void setVelocity(RealType v) { velocity = fabs(v); }
+    void setResource(ResType r)  { resType = r; }
     void setTemperature(RealType t);
-    void setDiffusion(RealType d) { diffusion = d; }
+    void setDiffusion(RealType d){ diffusion = d; }
     void setConsumption(RealType c) { consumption = c; }
-    void setFieldPoints(int n)  { fieldPoints = n; }
+    void setIDelay(RealType i)   { idelay = i; }
+    void setFieldPoints(int n)   { fieldPoints = n; }
     void clear(); // Clear all recorded data
     
   private:
@@ -65,7 +85,6 @@ namespace Predictive {
     inline void resourceDiffusion();
     inline void computeTrajectory();
     inline void predictiveTrajectory();
-    inline RealType weight(RealType, RealType, RealType);
 
     // Constants (external parameters)
     int nPred, nGrad;
@@ -92,6 +111,7 @@ namespace Predictive {
     Field *resourceRec;
     aligned_array<RealType> timeStamps; // The times that the resource record refer to
     Field resource, resbb; // Resource and resource buffer
+    ResType resType;   // What type of resource to use
     // Field to calculate diffusion
     Field diffField;
     VField trajectory; // The predictive agent trajectory field
@@ -103,7 +123,9 @@ namespace Predictive {
     // Data
     aligned_array<vec2> pAgents, gAgents;   // Predictive and gradient agent positions
     aligned_array<vec2> ipAgents, igAgents; // Initial predictive and gradient agent positions
-    RealType weight(RealType, RealType);    // Weighing function - function of space and time
+    
+    // Weighing function
+    RealType (*wght) (RealType, RealType);     // Weighing function - function of space and time
 
     // Recording data
     DataRecord *data;

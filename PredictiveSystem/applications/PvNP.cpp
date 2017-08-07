@@ -13,7 +13,9 @@ int main(int argc, char** argv) {
   // Parameters
   RealType time = 1.;  // How much time to simulate
   RealType tau = 0.05; // What predictivity pred agents will have
+  RealType velocity = 1; // What velocity the agents will have
   int label = 0;       // Label which program instance this is
+  int expected = 1;    // How many files will be in this batch
   int total = 5000;    // Total number of agents we will use
   int sIters = 10;     // Solution iterations to use
   int divisions = 20;  // Number of divisions
@@ -21,35 +23,44 @@ int main(int argc, char** argv) {
   bool print = false;  // Whether to print any output
   
   // Seed random
-  srand48( std::time( NULL ) );
+  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+  srand48( seed );
   seedNormalDistribution();
 
   // Parse arguments
   ArgParse parser(argc, argv);
   parser.get("time", time);
   parser.get("tau", tau);
+  parser.get("velocity", velocity);
   parser.get("label", label);
+  parser.get("expected", expected);
   parser.get("total", total);
   parser.get("sIters", sIters);
   parser.get("divisions", divisions);
   parser.get("writeDirectory", writeDirectory);
   parser.get("print", print);
   // Make sure we didn't enter any illegal tokens (ones not listed above) on the command line
-   try {
-     parser.check();
-   }
-   catch (ArgParse::UncheckedToken illegal) {
-     cout << "Illegal option: [" << illegal.token << "]. Exiting.\n";
-     exit(1);
-   }
+  try {
+    parser.check();
+  }
+  catch (ArgParse::UncheckedToken illegal) {
+    cout << "Illegal option: [" << illegal.token << "]. Exiting.\n";
+    exit(1);
+  }
 
+  // Random label
+  int LMax = 100000;
+  if (label==-1) label = static_cast<int>(drand48()*LMax);
+  
   // Create objects, set properties
   DataRecord data(argc, argv);
   System predictive(data);
   predictive.setSIters(sIters);
+  predictive.setTau(tau);
+  predictive.setVelocity(velocity);
   // Data arrays
   typedef pair<int, RealType> cpair;
-  vector<cpair> pCF, gCF;
+  vector<cpair> pCF, gCF, pDiff, gDiff;
   // Do runs
   RealType minPortion = 0.01, maxPortion = 0.5;
   RealType slope = (maxPortion-minPortion)/static_cast<RealType>(divisions);
@@ -73,20 +84,25 @@ int main(int argc, char** argv) {
     // Gather data
     pCF.push_back(cpair (nPred, data.getAvePCF()));
     gCF.push_back(cpair (nPred, data.getAveGCF()));
+    pDiff.push_back(cpair (nPred, data.getPDiff()));
+    gDiff.push_back(cpair (nPred, data.getGDiff()));
   }
   auto end = high_resolution_clock::now();
   // Print closing message
   if (print) cout << "Done. Total time: " << time_span(end, start) << "\n";
 
   // Write data
-  string wd = writeDirectory + "_tau" + toStr(tau);
+  string wd = writeDirectory + "_tau" + toStr(tau) + "_num" + toStr(total) + "_vel" + toStr(velocity);
   mkdir(wd.c_str(), 0777); // Will not occur if file exists already - so we're safe
+  if (label==1) printToCSV(wd+"/number.csv", vector<int>(1, expected));
   printToCSV(wd+"/PCF"+toStr(label)+".csv", pCF);
   printToCSV(wd+"/GCF"+toStr(label)+".csv", gCF);
-  
-  // Write a summary 
-  data.setWriteDirectory(wd);
-  data.writeSummary(&predictive, toStr(label));
+  printToCSV(wd+"/PDiff"+toStr(label)+".csv", pDiff);
+  printToCSV(wd+"/GDiff"+toStr(label)+".csv", gDiff);
 
+  // Write summary
+  data.setWriteDirectory(wd);
+  data.writeSummary(&predictive);
+  
   return 0;
 }

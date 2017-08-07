@@ -1,0 +1,25 @@
+----------------------- RUN SUMMARY -----------------------
+
+Command: ./driver -nP=250 -nG=4750 -pred=0.03 
+
+Epsilon: 0.001
+Solution iters: 10, Start sampling: 0
+Velocity: 1
+Gradient Init: true
+Resource Type: TWOPEAKS, Weight Type: 1/R^2
+Number of sampled agents: 25
+Eat Rate: 1, Resource Diffusion: 0.01
+Dim: 32, Wrap: true
+Temperature: 1, Perturb: false
+
+Predictivity: 0.03, Integration time diff: 0.01
+P Agents: 250, G Agents: 4750
+...........................................................
+Run Time: 255.08s (00:04:15.08)
+-----------------------------------------------------------
+
+pEat={0,1.07467,1.07703,1.07365,1.07336,1.073,1.07321,1.07277,1.07247,1.07334,1.07301};
+gEat={0,0.995267,0.995086,0.995319,0.99524,0.995323,0.995289,0.995325,0.995302,0.995272,0.995276};
+top=Max[{Max[pEat],Max[gEat]}];
+Print["Eating Records (Red: Predictors, Green: Gradient"]
+ListLinePlot[{pEat,gEat},PlotStyle->{Red,Green},PlotRange->{0,1.1*top},ImageSize->Large]
