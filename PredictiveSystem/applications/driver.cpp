@@ -32,6 +32,7 @@ int main(int argc, char** argv) {
   bool recPositions    = false;
   bool recResource     = false;
   bool rec             = false;
+  int nPathSamples     = 0;
 
   string writeDirectory = "RunData"; // The directory we will create (or overwrite) to write data to
 
@@ -62,6 +63,7 @@ int main(int argc, char** argv) {
   parser.get("recPositions", recPositions);
   parser.get("recResource", recResource);
   parser.get("rec", rec);
+  parser.get("nPathSamples", nPathSamples);
 
   parser.get("writeDirectory", writeDirectory);
   // Make sure we didn't enter any illegal tokens (ones not listed above) on the command line
@@ -83,6 +85,7 @@ int main(int argc, char** argv) {
     data.setRecPositions(true);
     data.setRecResource(true);
   }
+  data.setNPathSamples(nPathSamples);
   data.setWriteDirectory(writeDirectory);
   System predictive(data);
   if (noiseResource)  predictive.setResource(NOISE);

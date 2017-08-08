@@ -2,7 +2,7 @@
 #include "System.hpp"
 
 namespace Predictive {
-  DataRecord::DataRecord(int argc, char** argv) : npPaths(10), ngPaths(10), recTimer(0), recDelay(1./15.), recPositions(true), recResource(true), totalResource(0) {
+  DataRecord::DataRecord(int argc, char** argv) : npPaths(10), ngPaths(10), recTimer(0), recDelay(1./15.), recPositions(true), recResource(true), totalResource(0), nPathSamples(0) {
     for (int i=1; i<argc; ++i)
       command.push_back(argv[i]);
     // Set the timers to have the current time
@@ -39,7 +39,6 @@ namespace Predictive {
 	int t_iter = max(pPaths.at(s_iter).size(), gPaths.at(s_iter).size());
 	// Push a vector for this time step
 	if (np>0) {
-	  // pPaths.at(s_iter).push_back(vector<vec2>(np));
 	  pPaths.at(0).push_back(vector<vec2>(np));
 	  for (int i=0; i<np; ++i) {
 	    vec2 pos = system->pAgents.at(i);
@@ -48,7 +47,6 @@ namespace Predictive {
 	  }
 	}
 	if (ng>0) {
-	  // gPaths.at(s_iter).push_back(vector<vec2>(ng));
 	  gPaths.at(0).push_back(vector<vec2>(ng));
 	  for (int i=0; i<ng; ++i) {
 	    vec2 pos = system->gAgents.at(i);
@@ -56,6 +54,18 @@ namespace Predictive {
 	    Last(gPaths.at(0)).at(i) = pos;
 	  }
 	}
+      }
+
+      // L2 path difference
+      if (nPathSamples>0 && system->nPred>0) {
+	// Solution iteration and number of paths to record
+	int s_iter = system->s_iter;
+	int nPaths = min(system->nPred, nPathSamples);
+	// Add a time slice to record the positions in
+	pathSamples.at(s_iter).push_back(vector<vec2>());
+	// Record all the positions
+	for (int i=0; i<nPaths; ++i)
+	  Last(Last(pathSamples)).push_back(system->pAgents.at(i));
       }
       
       // Record resource
@@ -75,7 +85,10 @@ namespace Predictive {
     // Check for a valid system
     if (system==nullptr) return;
     // Push new record vectors
-    if (system->nPred>0) pConsumptionRec.push_back(vector<vec2>());
+    if (system->nPred>0) {
+      pConsumptionRec.push_back(vector<vec2>());
+      pathSamples.push_back(vector<vector<vec2> >());
+    }
     if (system->nGrad>0) gConsumptionRec.push_back(vector<vec2>());
   }
 
@@ -242,19 +255,38 @@ namespace Predictive {
   }
 
   RealType DataRecord::getAvePCF() {
+    if (pCF.empty()) return 0;
     return Average(pCF);
   }
 
   RealType DataRecord::getAveGCF() {
+    if (gCF.empty()) return 0;
     return Average(gCF);
   }
 
   RealType DataRecord::getPDiff() {
+    if (pCF.empty()) return 0;
     return Average(pCF) - pCF.at(0);
   }
 
   RealType DataRecord::getGDiff() {
+    if (gCF.empty()) return 0;
     return Average(gCF) - gCF.at(0);
+  }
+
+  RealType DataRecord::getAveL2() {
+    /*
+    int count = 0; 
+    RealType diff = 0;
+    for (const auto &SI : pathSamples) // solution iteration
+      for (const auto &TS : SI) // time slices
+	for (const auto A : TS) {// agents
+	  diff += sqr(displacement( pathSamples.at(n).at(s).at(t), Last(pathSamples).at( ));
+	  ++count;
+	}
+    RealType nrm = 1./count;
+    return diff*nrm;
+    */
   }
   
 }

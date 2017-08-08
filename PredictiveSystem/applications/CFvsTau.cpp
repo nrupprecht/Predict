@@ -59,9 +59,11 @@ int main(int argc, char** argv) {
  // Create objects, set properties
  DataRecord data(argc, argv);
  System predictive(data);
+ // Set the number of predictive and gradient agents
  int nPred = static_cast<int>(fraction*total), nGrad = total-nPred;
  predictive.setNPred(nPred);
  predictive.setNGrad(nGrad);
+ // Set other parameters
  predictive.setSIters(sIters);
  predictive.setVelocity(velocity);
 
