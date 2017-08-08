@@ -165,6 +165,9 @@ namespace Predictive {
     fout << "  - Time per solution iter.:   " << getElapsedTime() / system->sIters << "\n";
     fout << "  - Diffusion:                 " << system->diffusion << "\n";
     fout << "  - Total resources:           " << totalResource << "\n";
+    RealType current = system->resource.total();
+    fout << "  - Resources at end:          " << current << "\n";
+    fout << "  - Fraction res. remaining:   " << current / totalResource << "\n";
     fout << "\n";
     fout << "Agents:\n";
     fout << "  - Number of Predictors:      " << system->nPred << "\n";

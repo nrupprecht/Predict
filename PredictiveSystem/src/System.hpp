@@ -105,7 +105,7 @@ namespace Predictive {
     RealType itimer;   // How long since the last integration
     RealType idelay;   // Integration delay
     int iIter;         // What integration step we are on
-    int iPoints;       // How many integration slices we will have - this is calculated before each run
+    int iPoints; // How many integration slices we will have - this is calculated before each run
     int fieldPoints;   // How many points we use in the fields
     // The resource at different time slices. The first (0-th) time slice is the initial resource - we never change this. The t_iter-th resource is the current resource. Resources after this are the *predicted* resource fields.
     Field *resourceRec;

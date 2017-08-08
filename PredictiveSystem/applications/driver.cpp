@@ -23,6 +23,7 @@ int main(int argc, char** argv) {
   RealType diffusion   = -1.;   // Resource diffusion
   RealType consumption = -1.;   // Agents' resource consumption
   bool noiseResource   = false; // Use a smooth noise resource
+  bool srand           = true;  // Seed the random number generators
 
   RealType idelay      = -1;
   int fieldPoints      = -1;
@@ -35,11 +36,6 @@ int main(int argc, char** argv) {
   int nPathSamples     = 0;
 
   string writeDirectory = "RunData"; // The directory we will create (or overwrite) to write data to
-
-  // Seed random
-  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-  srand48( seed );
-  seedNormalDistribution();
 
   // Parse arguments
   ArgParse parser(argc, argv);
@@ -54,6 +50,7 @@ int main(int argc, char** argv) {
   parser.get("diffusion", diffusion);
   parser.get("consumption", consumption);
   parser.get("noiseResource", noiseResource);
+  parser.get("srand", srand);
 
   parser.get("idelay", idelay);
   parser.get("fieldPoints", fieldPoints);
@@ -75,6 +72,13 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
+  // Seed random
+  if (srand) {
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    srand48( seed );
+    seedNormalDistribution();
+  }
+  
   // Set parameters
   DataRecord data(argc, argv);
   data.setNPPaths(nPredPaths);

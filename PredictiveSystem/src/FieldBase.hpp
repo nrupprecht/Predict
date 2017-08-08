@@ -55,6 +55,8 @@ namespace Predictive {
     int getNY() const { return ny; }
     RealType getDX() const { return dx; }
     RealType getDY() const { return dy; }
+    RealType getIDX() const { return idx; }
+    RealType getIDY() const { return idy; }
     Bounds getBounds() const { return bounds; }
     int getBin(vec2) const;
 

@@ -2,15 +2,17 @@
 
 namespace Predictive {
 
-  void FieldGenerator::createSmoothNoise(Field& field, int frequencies, RealType mult) {
-
-    frequencies = 1; //**
-    mult=0.2;
-
+  /* Arguments: 
+   *   field       - The field to set
+   *   frequencies - The number of frequencies of noise to add, default 4
+   *   mult        - How much to multiply the amplitude of the noise by, default 1.1
+   *   minF        - Smallest frequency, default 4
+   */
+  void FieldGenerator::createSmoothNoise(Field& field, int frequencies, RealType mult, int minF) {
     // Reset field
     field.set(0.);
     // Set starting constants
-    RealType maxWave = 0.25;
+    RealType maxWave = 1./static_cast<RealType>(minF);
     RealType amp = 1000, wavelength = maxWave;
     // Superimpose different frequencies of noise
     for (int i=0; i<frequencies; ++i) {
@@ -83,20 +85,15 @@ namespace Predictive {
 	int X = static_cast<int>(x*dx/length);
 	int Y = static_cast<int>(y*dy/length);
 	// Distance (fraction of) between the left / below major point and the field location
-	RealType DX = x*dx/length - X; // static_cast<int>(x*dx/length);
-	RealType DY = y*dy/length - Y; // static_cast<int>(y*dy/length);
-
+	RealType DX = x*dx/length - X;
+	RealType DY = y*dy/length - Y;
+	// Translate points
 	X += transX; Y += transY;
-
 	// Get the four values, for interpolatoin
 	RealType TL = at(X, Y+1), TR = at(X+1, Y+1);
 	RealType BL = at(X, Y),   BR = at(X+1, Y);
 	// Add the (interpolated) value to the field
 	field.at(x,y) += interpolate(BL, BR, TL, TR, DX, DY);
-	/* Linear interpolation
-	RealType Left = (TL-BL)*DY+BL, Right = (TR-BR)*DY+BR;
-	RealType value = (Right-Left)*DX + Left;
-	*/
       }
 	
     delete [] points;
@@ -108,7 +105,7 @@ namespace Predictive {
     return l * (1 - f) + r * f;
   }
 
-  inline double FieldGenerator::interpolate(RealType TL, RealType TR, RealType BL, RealType BR, RealType dx, RealType dy) {
+  inline RealType FieldGenerator::interpolate(RealType TL, RealType TR, RealType BL, RealType BR, RealType dx, RealType dy) {
     RealType top = cosineInterpolate(TL, TR, dx), bottom = cosineInterpolate(BL, BR, dx);
     return cosineInterpolate(top, bottom, dy);
   }

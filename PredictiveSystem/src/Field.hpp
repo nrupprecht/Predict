@@ -23,10 +23,12 @@ namespace Predictive {
     // Set this field to be the laplacian of another field
     void laplacian(const Field&);
 
+    // If any values in the field are sub-zero, set them to zero
     friend void clamp(Field& field) {
       for (int y=0; y<field.ny; ++y)
 	for (int x=0; x<field.nx; ++x) {
-	  if (field.at(x,y)<0) field.at(x,y) = 0.;
+	  if (field.at(x,y)<0)
+	    field.at(x,y) = 0.;
 	}
     }
   };

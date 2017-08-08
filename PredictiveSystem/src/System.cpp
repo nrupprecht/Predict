@@ -72,10 +72,10 @@ namespace Predictive {
 
     // Initialize fields
     resourceRec = new Field[iPoints]; // Recorded resource fields
-    resource   = Field(bounds, fieldPoints);  // Resource field
-    diffField  = Field(bounds, fieldPoints);  // Difference field
-    trajectory = VField(bounds, fieldPoints); // Trajectory field
-    gradient   = VField(bounds, fieldPoints); // Gradient field
+    resource    = Field(bounds, fieldPoints);  // Resource field
+    diffField   = Field(bounds, fieldPoints);  // Difference field
+    trajectory  = VField(bounds, fieldPoints); // Trajectory field
+    gradient    = VField(bounds, fieldPoints); // Gradient field
     // Set the initial resource field
     FieldGenerator fieldGenerator;
     resourceRec[0] = Field(bounds, fieldPoints);
@@ -102,13 +102,10 @@ namespace Predictive {
       diffField.laplacian(resource);
       resource.plusEq(diffField, diffusion*epsilon);
       // Possible record field data
-      if (itimer>=idelay) {
+      if (fabs(time-(iIter+1)*idelay)<0.5*epsilon) {
 	++iIter;
-	// Check to avoid rounding errors that cause and additional resource to be stored
-	if (iIter<iPoints) {
-	  resourceRec[iIter] = resource;
-	  timeStamps.at(iIter) = time;
-	}
+	resourceRec[iIter] = resource;
+	timeStamps.at(iIter) = time;
 	itimer = 0;
       }
     }
@@ -150,17 +147,14 @@ namespace Predictive {
       // Update resource (diffusion)
       resourceDiffusion();
       // Possible update trajectory field
-      if (itimer>=idelay) {
+      if (fabs(time-(iIter+1)*idelay)<0.5*epsilon) { // If this is the closest iteration to when we should integrate
 	++iIter; // Increment beforehand so resourceRec[0] is never changed
 	computeTrajectory();
-	// Check, in case of rounding errors
-	if (iIter<iPoints) {
-	  //Last(fieldDiff).push_back(vec2(time, innerProduct(resourceRec[iIter], resource)/sqrt(resource.total()*resourceRec[iIter].total())));
-	  Last(fieldDiff).push_back(vec2(time, compairProduct(resourceRec[iIter], resource)));
-	  resourceRec[iIter] = resource; // Save the current resource
-	  timeStamps.at(iIter) = time;   // Save what time the resource corresponds to
-	}
-	itimer = 0.;
+	// Could also use inner product
+	Last(fieldDiff).push_back(vec2(time, compairProduct(resourceRec[iIter], resource)));
+	resourceRec[iIter] = resource; // Save the current resource
+	timeStamps.at(iIter) = time;   // Save what time the resource corresponds to
+	itimer = 0.; //-- We don't actually need this anymore
       }
       // Record data
       if (data)	data->record(this);
@@ -199,6 +193,7 @@ namespace Predictive {
     // Initialize resource to the resource of the current time step, then eat from it and diffuse the resulting resource
     resbb = resource;
     RealType area = resource.getDX()*resource.getDY();
+    RealType scaledConsumption = consumption/(nPred+nGrad);
 
     // Binned eating method
    int nx = resource.getNX(), ny = resource.getNY();
@@ -206,7 +201,11 @@ namespace Predictive {
     for (auto p : pAgents) ++bins.at( resource.getBin(p) );
     for (int y=0; y<nx; ++y)
       for (int x=0; x<nx; ++x) {
-	RealType amount = epsilon * (bins.at(nx*y+x)*consumption*resbb.at(x,y));
+	// Calculate the volume of resources to eat
+	RealType rho    = bins.at(nx*y+x) / area; // Agent density
+	RealType factor = scaledConsumption*rho*resbb.at(x,y); // c * rho * phi
+	RealType amount = epsilon * factor;
+	// Subtract the volume
 	resource.at(x,y) -= amount;
 	pConsumption += amount * area;
       }
@@ -218,7 +217,11 @@ namespace Predictive {
     for (auto g : gAgents) ++bins.at( resource.getBin(g) );
     for (int y=0; y<nx;++y)
       for (int x=0; x<nx; ++x) {
-	RealType amount = epsilon * (bins.at(nx*y+x)*consumption*resbb.at(x,y));
+	// Calculate the volume of resources to eat
+	RealType rho    = bins.at(nx*y+x) / area;              // Agent density
+	RealType factor = scaledConsumption*rho*resbb.at(x,y); // c * rho * phi
+	RealType amount = epsilon * factor;
+	// Subtract the volume
 	resource.at(x,y) -= amount;
 	gConsumption += amount * area;
       }
