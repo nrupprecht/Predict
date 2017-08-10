@@ -190,6 +190,7 @@ namespace Predictive {
 
   inline void System::consume() {
     // Update resource at the next temporal iteration based on the current field values - this means that everyone eats "at the same time"
+
     // Initialize resource to the resource of the current time step, then eat from it and diffuse the resulting resource
     resbb = resource;
     RealType area = resource.getDX()*resource.getDY();

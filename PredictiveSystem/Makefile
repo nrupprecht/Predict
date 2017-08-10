@@ -28,7 +28,7 @@ SRC_OBJECTS = build/Field.o build/System.o build/Field.o build/VField.o build/ve
 
 ALL_OBJECTS = $(SRC_OBJECTS)
 
-all: bin/driver bin/PvNP bin/CFvsTau
+all: bin/driver bin/PvNP bin/CFvsTau bin/CFvsConsumption
 
 ###### Executables #####
 bin/driver: build/driver.o $(ALL_OBJECTS)
@@ -38,6 +38,9 @@ bin/PvNP: build/PvNP.o $(ALL_OBJECTS)
 	$(CC) $^ -o $@
 
 bin/CFvsTau: build/CFvsTau.o $(ALL_OBJECTS)
+	$(CC) $^ -o $@
+
+bin/CFvsConsumption: build/CFvsConsumption.o $(ALL_OBJECTS)
 	$(CC) $^ -o $@
 
 #####   Objects   #####

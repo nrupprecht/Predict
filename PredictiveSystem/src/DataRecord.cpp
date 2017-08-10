@@ -164,6 +164,7 @@ namespace Predictive {
     fout << "  - Real Time:                 " << getElapsedTime() << " (" << printAsTime(getElapsedTime()) << ")\n";
     fout << "  - Time per solution iter.:   " << getElapsedTime() / system->sIters << "\n";
     fout << "  - Diffusion:                 " << system->diffusion << "\n";
+    fout << "  - Temperature:               " << system->temperature << "\n";
     fout << "  - Total resources:           " << totalResource << "\n";
     RealType current = system->resource.total();
     fout << "  - Resources at end:          " << current << "\n";
@@ -174,6 +175,7 @@ namespace Predictive {
     fout << "  - Number of Gradients:       " << system->nGrad << "\n";
     fout << "  - Predictivity (tau):        " << system->tau << "\n";
     fout << "  - Agent velocity:            " << system->velocity << "\n";
+    fout << "  - Range (tau*velocity):      " << system->velocity * system->tau << "\n";
     fout << "  - Agent consumption rate:    " << system->consumption << "\n";
     fout << "  - Solution iterations:       " << system->sIters << "\n";
     fout << "\n";
@@ -194,23 +196,29 @@ namespace Predictive {
     if (hasG) fout << "  - Max grad. CF:              " << Max(gCF) << "\n";
     if (hasP) fout << "  - Initial pred. CF:          " << pCF.at(0) << "\n";
     if (hasG) fout << "  - Initial grad. CF:          " << gCF.at(0) << "\n";
-    if (hasP) fout << "  - Pred. CF diff:             " << aveP - pCF.at(0) << "\n";
-    if (hasG) fout << "  - Grad. CF diff:             " << aveG - gCF.at(0) << "\n";
+    if (hasP) {
+      RealType diff = aveP - pCF.at(0);
+      fout << "  - Pred. CF diff (% diff):    " << aveP - pCF.at(0) << " ( " << diff/pCF.at(0)*100 << "% )\n";
+    }
+    if (hasG) {
+      RealType diff = aveG - gCF.at(0);
+      fout << "  - Grad. CF diff (% diff):    " << aveG - gCF.at(0) << " ( " << diff/gCF.at(0)*100 << "% ) \n";
+    }
+    fout << "\n";
+    fout << "Data collection:\n";
+    fout << "  - Record Delay (fps):         " << recDelay << " ( " << 1./recDelay << " )\n";
+    fout << "  - Number of L2 path samples:  " << nPathSamples << "\n";
+    fout << "  - Animated Predictors:        " << min(system->nPred, npPaths) << "\n";
+    fout << "  - Animated Gradient agents:   " << min(system->nGrad, ngPaths) << "\n";
   }
 
   void DataRecord::write(System* system) {
-
-    /*
-    int i=0;
-    for (const auto path& : pPaths)
-      printToDirectory(writeDirectory+"/PosP/SI"+toStr(i), "pos", pPaths.at(i));
-    */	
-
     // Print position data
     if (!pPaths.empty())
       printToDirectory(writeDirectory+"/PosP", "pos", pPaths.at(0));
     if (!gPaths.empty())
       printToDirectory(writeDirectory+"/PosG", "pos", gPaths.at(0));
+
     // Print resource data
     if (!resourceRecord.empty()) {
       // Make a directory for the resource data
@@ -244,6 +252,7 @@ namespace Predictive {
     // Print consumption vs solution iteration data
     printToCSV(writeDirectory+"/pCvS.csv", pCF);
     printToCSV(writeDirectory+"/gCvS.csv", gCF);
+    
     // Print field difference data
     if (system && !system->fieldDiff.empty()) {
       // Make a directory for the field data
@@ -254,6 +263,15 @@ namespace Predictive {
 	printToCSV(writeDirectory+"/FieldDiff/fd"+toStr(i)+".csv", df);
 	++i;
       }
+    }
+
+    // Print L2 path difference data
+    if (0<nPathSamples) {
+      typedef pair<int, RealType> cpair;
+      vector<cpair> L2PD;
+      for (int i=0; i<pathSamples.size(); ++i)
+	L2PD.push_back( cpair( i, getAveL2(i) ) );
+      printToCSV(writeDirectory+"/L2PathDiff.csv", L2PD);
     }
   }
 
@@ -277,19 +295,40 @@ namespace Predictive {
     return Average(gCF) - gCF.at(0);
   }
 
-  RealType DataRecord::getAveL2() {
-    /*
-    int count = 0; 
+  RealType DataRecord::getPDiffFactor() {
+    if (pCF.empty()) return 0;
+    return (Average(pCF) - pCF.at(0))/pCF.at(0);
+  }
+
+  RealType DataRecord::getGDiffFactor() {
+    if (gCF.empty()) return 0;
+    return (Average(gCF) - gCF.at(0))/gCF.at(0);
+  }
+
+  RealType DataRecord::getAveL2(int sIt) {
+    if (pathSamples.size()<=sIt || nPathSamples<1) return -1;
+    int count = 0;
     RealType diff = 0;
-    for (const auto &SI : pathSamples) // solution iteration
-      for (const auto &TS : SI) // time slices
-	for (const auto A : TS) {// agents
-	  diff += sqr(displacement( pathSamples.at(n).at(s).at(t), Last(pathSamples).at( ));
-	  ++count;
-	}
+    // Average l2 differences
+    auto& siSlice = pathSamples.at(sIt);
+    for (int ts=0; ts<siSlice.size(); ++ts) {
+      auto &slice = siSlice.at(ts);
+      for (int n=0; n<slice.size(); ++n) {
+	diff += sqr( displacement( slice.at(n) , Last(pathSamples).at(ts).at(n) ));
+	++count;
+      } 
+    }
+
+    // Normalize and return
     RealType nrm = 1./count;
     return diff*nrm;
-    */
   }
   
+  RealType DataRecord::getAveL2() {
+    RealType ave = 0;
+    for (int i=0; i<pathSamples.size(); ++i)
+      ave += getAveL2(i);
+    return ave / pathSamples.size();
+  }
+
 }

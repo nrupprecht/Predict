@@ -2,6 +2,7 @@
 #define __DATA_RECORD_HPP__
 
 #include "../include/vec2d.hpp"
+#include "../include/Bounds.hpp"
 
 namespace Predictive {
   
@@ -9,6 +10,26 @@ namespace Predictive {
   class System;
   class Field;
 
+  // Displacement function, p - q, assumes wrapping and Bounds(0,1,0,1)
+  inline vec2 displacement(vec2 p, vec2 q) {
+    // Set assumptions
+    const bool wrapX(true), wrapY(true);
+    const Bounds simBounds(0,1,0,1);
+    // Break up coordinates
+    RealType ax = p.x, bx = q.x, ay = p.y, by = q.y;
+    // Get the correct (minimal) displacement vector pointing from B to A
+    RealType X = ax-bx;
+    RealType Y = ay-by;
+    if (wrapX) {
+      RealType dx = (simBounds.right-simBounds.left)-fabs(X);
+      if (dx<fabs(X)) X = X>0 ? -dx : dx;
+    }
+    if (wrapY) {
+      RealType dy =(simBounds.top-simBounds.bottom)-fabs(Y);
+      if (dy<fabs(Y)) Y = Y>0 ? -dy : dy;
+    }
+    return vec2(X,Y);
+  }
   
   class DataRecord {
   public:
@@ -46,6 +67,9 @@ namespace Predictive {
     RealType getAveGCF();
     RealType getPDiff();
     RealType getGDiff();
+    RealType getPDiffFactor();
+    RealType getGDiffFactor();
+    RealType getAveL2(int);
     RealType getAveL2();
     
   private:

@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
   predictive.setVelocity(velocity);
   // Data arrays
   typedef pair<int, RealType> cpair;
-  vector<cpair> pCF, gCF, pDiff, gDiff;
+  vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor;
   // Do runs
   RealType minPortion = 0.01, maxPortion = 0.5;
   RealType slope = (maxPortion-minPortion)/static_cast<RealType>(divisions);
@@ -86,6 +86,8 @@ int main(int argc, char** argv) {
     gCF.push_back(cpair (nPred, data.getAveGCF()));
     pDiff.push_back(cpair (nPred, data.getPDiff()));
     gDiff.push_back(cpair (nPred, data.getGDiff()));
+    pDiffFactor.push_back(cpair (nPred, data.getPDiffFactor()));
+    gDiffFactor.push_back(cpair (nPred, data.getGDiffFactor()));
   }
   auto end = high_resolution_clock::now();
   // Print closing message
@@ -99,6 +101,8 @@ int main(int argc, char** argv) {
   printToCSV(wd+"/GCF"+toStr(label)+".csv", gCF);
   printToCSV(wd+"/PDiff"+toStr(label)+".csv", pDiff);
   printToCSV(wd+"/GDiff"+toStr(label)+".csv", gDiff);
+  printToCSV(wd+"/PDiffFactor"+toStr(label)+".csv", pDiffFactor);
+  printToCSV(wd+"/GDiffFactor"+toStr(label)+".csv", gDiffFactor);
 
   // Write summary
   data.setWriteDirectory(wd);
