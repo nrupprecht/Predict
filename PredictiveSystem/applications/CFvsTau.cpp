@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
   
   // Data arrays
   typedef pair<RealType, RealType> cpair;
-  vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor;
+  vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor, L2pathDiff;
   // Do runs
   RealType slope = (max-min)/static_cast<RealType>(divisions);
   // Print opening message
@@ -93,6 +93,7 @@ int main(int argc, char** argv) {
     gDiff.push_back(cpair (tau, data.getGDiff()));
     pDiffFactor.push_back(cpair (tau, data.getPDiffFactor()));
     gDiffFactor.push_back(cpair(tau, data.getGDiffFactor()));
+    L2pathDiff.push_back(cpair (nPred, data.getAveL2()));
   }
   auto end = high_resolution_clock::now();
   // Print closing message
@@ -108,6 +109,7 @@ int main(int argc, char** argv) {
   printToCSV(wd+"/GDiff"+toStr(label)+".csv", gDiff);
   printToCSV(wd+"/PDiffFactor"+toStr(label)+".csv", pDiffFactor);
   printToCSV(wd+"/GDiffFactor"+toStr(label)+".csv", gDiffFactor);
+  printToCSV(wd+"/L2PathDiff"+toStr(label)+".csv", gDiffFactor);
 
   // Write summary
   data.setWriteDirectory(wd);

@@ -195,37 +195,41 @@ namespace Predictive {
     resbb = resource;
     RealType area = resource.getDX()*resource.getDY();
     RealType scaledConsumption = consumption/(nPred+nGrad);
+    int nx = resource.getNX(), ny = resource.getNY();
 
     // Binned eating method
-   int nx = resource.getNX(), ny = resource.getNY();
-    vector<int> bins(nx*ny, 0);
-    for (auto p : pAgents) ++bins.at( resource.getBin(p) );
-    for (int y=0; y<nx; ++y)
-      for (int x=0; x<nx; ++x) {
-	// Calculate the volume of resources to eat
-	RealType rho    = bins.at(nx*y+x) / area; // Agent density
-	RealType factor = scaledConsumption*rho*resbb.at(x,y); // c * rho * phi
-	RealType amount = epsilon * factor;
-	// Subtract the volume
-	resource.at(x,y) -= amount;
-	pConsumption += amount * area;
-      }
-
+    if (nPred>0) {
+      vector<int> bins(nx*ny, 0);
+      for (auto p : pAgents) ++bins.at( resource.getBin(p) );
+      for (int y=0; y<nx; ++y)
+	for (int x=0; x<nx; ++x) {
+	  // Calculate the volume of resources to eat
+	  RealType rho    = bins.at(nx*y+x) / area; // Agent density
+	  RealType factor = scaledConsumption*rho*resbb.at(x,y); // c * rho * phi
+	  RealType amount = epsilon * factor;
+	  // Subtract the volume
+	  resource.at(x,y) -= amount;
+	  pConsumption += amount * area;
+	}
+    }
+    
     // Gradient agents eat (note, as above, they are not actually eating "after" the predictive agents.
-
+    
     // Binned eating method
-    bins = vector<int>(nx*ny, 0);
-    for (auto g : gAgents) ++bins.at( resource.getBin(g) );
-    for (int y=0; y<nx;++y)
-      for (int x=0; x<nx; ++x) {
-	// Calculate the volume of resources to eat
-	RealType rho    = bins.at(nx*y+x) / area;              // Agent density
-	RealType factor = scaledConsumption*rho*resbb.at(x,y); // c * rho * phi
-	RealType amount = epsilon * factor;
-	// Subtract the volume
-	resource.at(x,y) -= amount;
-	gConsumption += amount * area;
-      }
+    if (nGrad>0) {
+      vector<int> bins(nx*ny, 0);
+      for (auto g : gAgents) ++bins.at( resource.getBin(g) );
+      for (int y=0; y<nx;++y)
+	for (int x=0; x<nx; ++x) {
+	  // Calculate the volume of resources to eat
+	  RealType rho    = bins.at(nx*y+x) / area;              // Agent density
+	  RealType factor = scaledConsumption*rho*resbb.at(x,y); // c * rho * phi
+	  RealType amount = epsilon * factor;
+	  // Subtract the volume
+	  resource.at(x,y) -= amount;
+	  gConsumption += amount * area;
+	}
+    }
   }
 
   inline void System::resourceDiffusion() {

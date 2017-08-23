@@ -326,9 +326,25 @@ namespace Predictive {
   
   RealType DataRecord::getAveL2() {
     RealType ave = 0;
-    for (int i=0; i<pathSamples.size(); ++i)
-      ave += getAveL2(i);
-    return ave / pathSamples.size();
+    int size = 0;
+    for (int i=0; i<pathSamples.size(); ++i) {
+      RealType l2 = getAveL2(i);
+      if (l2>=0) {
+	ave += l2;
+	++size;
+      }
+    }
+    return size>0 ? ave / size : 0;
+  }
+
+  RealType DataRecord::getAveFieldDiff(System *system) {
+    RealType ave = 0;
+    int size = 0;
+    for (int i=1; i<system->fieldDiff.size(); ++i) {
+      ave += Average(system->fieldDiff.at(i)).y;
+      ++size;
+    }
+    return size>0 ? ave / size : 0;
   }
 
 }

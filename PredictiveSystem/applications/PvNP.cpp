@@ -14,12 +14,13 @@ int main(int argc, char** argv) {
   RealType time = 1.;  // How much time to simulate
   RealType tau = 0.05; // What predictivity pred agents will have
   RealType velocity = 1; // What velocity the agents will have
-  int label = 0;       // Label which program instance this is
+  RealType temperature = 0; // Temperature
+  int label = 1;       // Label which program instance this is
   int expected = 1;    // How many files will be in this batch
   int total = 5000;    // Total number of agents we will use
   int sIters = 10;     // Solution iterations to use
   int divisions = 20;  // Number of divisions
-  string writeDirectory = "RecData"; // Base name of the directory to write data to
+  string writeDirectory = "PvNP"; // Base name of the directory to write data to
   bool print = false;  // Whether to print any output
   
   // Seed random
@@ -32,6 +33,7 @@ int main(int argc, char** argv) {
   parser.get("time", time);
   parser.get("tau", tau);
   parser.get("velocity", velocity);
+  parser.get("temperature", temperature);
   parser.get("label", label);
   parser.get("expected", expected);
   parser.get("total", total);
@@ -58,9 +60,10 @@ int main(int argc, char** argv) {
   predictive.setSIters(sIters);
   predictive.setTau(tau);
   predictive.setVelocity(velocity);
+  predictive.setTemperature(temperature);
   // Data arrays
   typedef pair<int, RealType> cpair;
-  vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor;
+  vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor, L2pathDiff, fieldDiff;
   // Do runs
   RealType minPortion = 0.01, maxPortion = 0.5;
   RealType slope = (maxPortion-minPortion)/static_cast<RealType>(divisions);
@@ -88,13 +91,15 @@ int main(int argc, char** argv) {
     gDiff.push_back(cpair (nPred, data.getGDiff()));
     pDiffFactor.push_back(cpair (nPred, data.getPDiffFactor()));
     gDiffFactor.push_back(cpair (nPred, data.getGDiffFactor()));
+    L2pathDiff.push_back(cpair (nPred, data.getAveL2()));
+    fieldDiff.push_back(cpair (nPred, data.getAveFieldDiff(&predictive)) );
   }
   auto end = high_resolution_clock::now();
   // Print closing message
   if (print) cout << "Done. Total time: " << time_span(end, start) << "\n";
 
   // Write data
-  string wd = writeDirectory + "_tau" + toStr(tau) + "_num" + toStr(total) + "_vel" + toStr(velocity);
+  string wd = writeDirectory + "_tau" + toStr(tau) + "_num" + toStr(total) + "_vel" + toStr(velocity) + "_T" + toStr(temperature);
   mkdir(wd.c_str(), 0777); // Will not occur if file exists already - so we're safe
   if (label==1) printToCSV(wd+"/number.csv", vector<int>(1, expected));
   printToCSV(wd+"/PCF"+toStr(label)+".csv", pCF);
@@ -103,6 +108,8 @@ int main(int argc, char** argv) {
   printToCSV(wd+"/GDiff"+toStr(label)+".csv", gDiff);
   printToCSV(wd+"/PDiffFactor"+toStr(label)+".csv", pDiffFactor);
   printToCSV(wd+"/GDiffFactor"+toStr(label)+".csv", gDiffFactor);
+  printToCSV(wd+"/L2PathDiff"+toStr(label)+".csv", gDiffFactor);
+  printToCSV(wd+"/FieldDiff"+toStr(label)+".csv", fieldDiff);
 
   // Write summary
   data.setWriteDirectory(wd);

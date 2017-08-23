@@ -71,6 +71,7 @@ namespace Predictive {
     RealType getGDiffFactor();
     RealType getAveL2(int);
     RealType getAveL2();
+    RealType getAveFieldDiff(System*);
     
   private:
     // Data storage

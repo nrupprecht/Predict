@@ -131,7 +131,7 @@ namespace Predictive {
     DataRecord *data;
     friend class DataRecord;
     RealType pConsumption, gConsumption; // Amount consumed by predictive and gradient agentsc
-    vector<vector<vec2> > fieldDiff;
+    vector<vector<vec2> > fieldDiff; // [ sIter ] [ time ]
   };
 
 }
