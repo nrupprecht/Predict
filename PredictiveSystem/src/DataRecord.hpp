@@ -85,7 +85,7 @@ namespace Predictive {
     RealType totalResource;                // The total amount of resource
     // For L2 path difference - this data can be extracted from pPaths, but we keep them separate so we can set the number of animated objects and L2 paths independently
     int nPathSamples;                      // Number of paths to record, for L2 path difference
-    vector<vector<vector<vec2> > > pathSamples;     // [ s_iter ] [ t_iter ] [ agent # ] (vec2)
+    vector<vector<vector<vec2> > > pathSamples;     // [ s_iter ] [ t_iter ] [ agent # ] (vec2 position)
 
     // Timers
     RealType recTimer;

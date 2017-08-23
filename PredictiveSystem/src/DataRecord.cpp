@@ -123,6 +123,7 @@ namespace Predictive {
     npPaths = ngPaths = 0;
     pPaths.clear();
     gPaths.clear();
+    pathSamples.clear();
     resourceRecord.clear();
     pConsumptionRec.clear();
     gConsumptionRec.clear();
@@ -318,15 +319,17 @@ namespace Predictive {
 	++count;
       } 
     }
-
     // Normalize and return
     RealType nrm = 1./count;
-    return diff*nrm;
+    return count>0 ? diff*nrm : 0;
   }
   
   RealType DataRecord::getAveL2() {
     RealType ave = 0;
     int size = 0;
+
+    cout << pathSamples.size() << endl;
+
     for (int i=0; i<pathSamples.size(); ++i) {
       RealType l2 = getAveL2(i);
       if (l2>=0) {

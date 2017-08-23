@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
   predictive.setTau(tau);
   predictive.setVelocity(velocity);
   predictive.setTemperature(temperature);
+  data.setNPathSamples(5000); // Collect path samples
   // Data arrays
   typedef pair<int, RealType> cpair;
   vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor, L2pathDiff, fieldDiff;
@@ -108,7 +109,7 @@ int main(int argc, char** argv) {
   printToCSV(wd+"/GDiff"+toStr(label)+".csv", gDiff);
   printToCSV(wd+"/PDiffFactor"+toStr(label)+".csv", pDiffFactor);
   printToCSV(wd+"/GDiffFactor"+toStr(label)+".csv", gDiffFactor);
-  printToCSV(wd+"/L2PathDiff"+toStr(label)+".csv", gDiffFactor);
+  printToCSV(wd+"/L2PathDiff"+toStr(label)+".csv", L2pathDiff);
   printToCSV(wd+"/FieldDiff"+toStr(label)+".csv", fieldDiff);
 
   // Write summary
