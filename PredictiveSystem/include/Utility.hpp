@@ -75,17 +75,17 @@ namespace Predictive {
   const RealType PI = 3.14159265358979;
 
   // Squaring function
-  template<typename T> inline T sqr(const T& value) {
+  template<typename T> inline T sqr(const T value) {
     return value*value;
   }
 
   // Min function
-  template<typename T> inline T min(const T& a, const T& b) {
+  template<typename T> inline T min(const T a, const T b) {
     return a<b ? a : b;
   }
 
   // Max function
-  template<typename T> inline T max(const T& a, const T& b) {
+  template<typename T> inline T max(const T a, const T b) {
     return a<b ? b : a;
   }
 

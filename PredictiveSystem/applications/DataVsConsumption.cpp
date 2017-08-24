@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
   int total = 5000;    // Total number of agents we will use
   int sIters = 10;     // Solution iterations to use
   int divisions = 20;  // Number of divisions
-  string writeDirectory = "CFvsConsumption"; // Base name of the directory to write data to
+  string writeDirectory = "DataVsConsumption"; // Base name of the directory to write data to
   bool print = false;  // Whether to print any output
   
   // Seed random
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
   printToCSV(wd+"/GDiff"+toStr(label)+".csv", gDiff);
   printToCSV(wd+"/PDiffFactor"+toStr(label)+".csv", pDiffFactor);
   printToCSV(wd+"/GDiffFactor"+toStr(label)+".csv", gDiffFactor);
-  printToCSV(wd+"/L2PathDiff"+toStr(label)+".csv", gDiffFactor);
+  printToCSV(wd+"/L2PathDiff"+toStr(label)+".csv", L2pathDiff);
 
   // Write summary
   data.setWriteDirectory(wd);

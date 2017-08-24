@@ -13,15 +13,15 @@ int main(int argc, char** argv) {
   // Parameters
   RealType time = 1.;  // How much time to simulate
   RealType velocity = 1; // What velocity the agents will have
-  RealType min = 0.;   // The minimum predictivity
-  RealType max = 0.2;  // The maximum predictivity
+  RealType minP = 0.;   // The minimum predictivity
+  RealType maxP = 0.2;  // The maximum predictivity
   int label = 1;       // Label which program instance this is
   int expected = 1;    // How many files will be in this batch
   RealType fraction = 0.2; // Fraction of agents that are predictive
   int total = 5000;    // Total number of agents
   int sIters = 10;     // Solution iterations to use
   int divisions = 20;  // Number of divisions
-  string writeDirectory = "CFvsTau"; // Base name of the directory to write data to
+  string writeDirectory = "DataVsTau"; // Base name of the directory to write data to
   bool print = false;  // Whether to print any output
   
   // Seed random
@@ -33,8 +33,8 @@ int main(int argc, char** argv) {
   ArgParse parser(argc, argv);
   parser.get("time", time);
   parser.get("velocity", velocity);
-  parser.get("min", min);
-  parser.get("max", max);
+  parser.get("min", minP);
+  parser.get("max", maxP);
   parser.get("label", label);
   parser.get("expected", expected);
   parser.get("fraction", fraction);
@@ -69,14 +69,15 @@ int main(int argc, char** argv) {
   
   // Data arrays
   typedef pair<RealType, RealType> cpair;
-  vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor, L2pathDiff;
+  vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor, L2pathDiff, fieldDiff;
   // Do runs
-  RealType slope = (max-min)/static_cast<RealType>(divisions);
+  divisions = max(2, divisions); // Make sure there are at least two divisions
+  RealType slope = (maxP-minP)/static_cast<RealType>(divisions-1);
   // Print opening message
   if (print) cout << "Starting runs ...\n";
   auto start = high_resolution_clock::now();
   for (int i=0; i<divisions; ++i) {
-    RealType tau = min+i*slope;
+    RealType tau = minP+slope*i;
     if (print) cout << "Running with predictivity " << tau << " (" << i+1 << " of " << divisions << ") ...";
     auto start_time = high_resolution_clock::now();
     // Clear out old data
@@ -87,13 +88,19 @@ int main(int argc, char** argv) {
     auto end_time = high_resolution_clock::now();
     if (print) cout << "Done (" << time_span(end_time, start_time) << ").\n";
     // Gather data
+    //  Consumption factors 
     pCF.push_back(cpair (tau, data.getAvePCF()));
     gCF.push_back(cpair (tau, data.getAveGCF()));
+    //  Difference in consumption factors
     pDiff.push_back(cpair (tau, data.getPDiff()));
     gDiff.push_back(cpair (tau, data.getGDiff()));
+    //  % Difference in consumption factors
     pDiffFactor.push_back(cpair (tau, data.getPDiffFactor()));
     gDiffFactor.push_back(cpair(tau, data.getGDiffFactor()));
-    L2pathDiff.push_back(cpair (nPred, data.getAveL2()));
+    //  L2 path difference
+    L2pathDiff.push_back(cpair (tau, data.getAveL2()));
+    //  Field difference
+    fieldDiff.push_back(cpair (tau, data.getAveFieldDiff(&predictive)) );
   }
   auto end = high_resolution_clock::now();
   // Print closing message
@@ -109,7 +116,8 @@ int main(int argc, char** argv) {
   printToCSV(wd+"/GDiff"+toStr(label)+".csv", gDiff);
   printToCSV(wd+"/PDiffFactor"+toStr(label)+".csv", pDiffFactor);
   printToCSV(wd+"/GDiffFactor"+toStr(label)+".csv", gDiffFactor);
-  printToCSV(wd+"/L2PathDiff"+toStr(label)+".csv", gDiffFactor);
+  printToCSV(wd+"/L2PathDiff"+toStr(label)+".csv", L2pathDiff);
+  printToCSV(wd+"/FieldDiff"+toStr(label)+".csv", fieldDiff);
 
   // Write summary
   data.setWriteDirectory(wd);

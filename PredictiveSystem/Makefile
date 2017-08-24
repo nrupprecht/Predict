@@ -24,23 +24,24 @@ CC   = $(ICC)
 COMP = $(ICOMP)
 
 # All object files needed
-SRC_OBJECTS = build/Field.o build/System.o build/Field.o build/VField.o build/vec2d.o build/DataRecord.o build/FieldGenerator.o
+SRC_OBJECTS = build/Field.o build/System.o build/Field.o build/VField.o build/DataRecord.o build/FieldGenerator.o
+INC_OBJECTS = build/vec2d.o
 
-ALL_OBJECTS = $(SRC_OBJECTS)
+ALL_OBJECTS = $(SRC_OBJECTS) $(INC_OBJECTS)
 
-all: bin/driver bin/PvNP bin/CFvsTau bin/CFvsConsumption
+all: bin/driver bin/DataVsNP bin/DataVsTau bin/DataVsConsumption
 
 ###### Executables #####
 bin/driver: build/driver.o $(ALL_OBJECTS)
 	$(CC) $^ -o $@
 
-bin/PvNP: build/PvNP.o $(ALL_OBJECTS)
+bin/DataVsNP: build/DataVsNP.o $(ALL_OBJECTS)
 	$(CC) $^ -o $@
 
-bin/CFvsTau: build/CFvsTau.o $(ALL_OBJECTS)
+bin/DataVsTau: build/DataVsTau.o $(ALL_OBJECTS)
 	$(CC) $^ -o $@
 
-bin/CFvsConsumption: build/CFvsConsumption.o $(ALL_OBJECTS)
+bin/DataVsConsumption: build/DataVsConsumption.o $(ALL_OBJECTS)
 	$(CC) $^ -o $@
 
 #####   Objects   #####
