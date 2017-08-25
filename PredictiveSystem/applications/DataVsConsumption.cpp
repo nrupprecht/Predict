@@ -14,6 +14,7 @@ int main(int argc, char** argv) {
   RealType time = 1.;  // How much time to simulate
   RealType tau = 0.05; // What predictivity pred agents will have
   RealType velocity = 1; // What velocity the agents will have
+  RealType temperature = 0; // Temperature
   RealType min = 0.05; // The minimum consumption
   RealType max = 5.;   // The maximum consumption
   int label = 0;       // Label which program instance this is
@@ -35,6 +36,7 @@ int main(int argc, char** argv) {
   parser.get("time", time);
   parser.get("tau", tau);
   parser.get("velocity", velocity);
+  parser.get("temperature", temperature);
   parser.get("min", min);
   parser.get("max", max);
   parser.get("label", label);
@@ -69,7 +71,8 @@ int main(int argc, char** argv) {
   predictive.setSIters(sIters);
   predictive.setTau(tau);
   predictive.setVelocity(velocity);
-  
+  predictive.setTemperature(temperature);
+  data.setNPathSamples(5000); // Collect path samples
   // Data arrays
   typedef pair<RealType, RealType> cpair;
   vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor, L2pathDiff;

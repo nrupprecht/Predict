@@ -13,6 +13,7 @@ int main(int argc, char** argv) {
   // Parameters
   RealType time = 1.;  // How much time to simulate
   RealType velocity = 1; // What velocity the agents will have
+  RealType temperature = 0; // Temperature
   RealType minP = 0.;   // The minimum predictivity
   RealType maxP = 0.2;  // The maximum predictivity
   int label = 1;       // Label which program instance this is
@@ -33,6 +34,7 @@ int main(int argc, char** argv) {
   ArgParse parser(argc, argv);
   parser.get("time", time);
   parser.get("velocity", velocity);
+  parser.get("temperature", temperature);
   parser.get("min", minP);
   parser.get("max", maxP);
   parser.get("label", label);
@@ -66,7 +68,8 @@ int main(int argc, char** argv) {
   // Set other parameters
   predictive.setSIters(sIters);
   predictive.setVelocity(velocity);
-  
+  predictive.setTemperature(temperature);
+  data.setNPathSamples(5000); // Collect path samples
   // Data arrays
   typedef pair<RealType, RealType> cpair;
   vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor, L2pathDiff, fieldDiff;
