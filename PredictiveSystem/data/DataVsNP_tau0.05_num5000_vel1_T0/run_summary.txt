@@ -1,0 +1,51 @@
+**********          SUMMARY          **********
+********* Predictive System Simulator *********
+********** 2017, Nathaniel Rupprecht **********
+***********************************************
+
+Command:
+  -label=93 -tau=0.05 -sIters=25 -total=5000 -divisions=50 -print -expected=100 -temperature=0 
+
+Simulation and space:
+  - Simulated Time:            1
+  - Real Time:                 36.3463 (36.3463)
+  - Time per solution iter.:   1.45385
+  - Diffusion:                 0.01
+  - Temperature:               0
+  - Total resources:           257.436
+  - Resources at end:          16.8609
+  - Fraction res. remaining:   0.0654957
+
+Agents:
+  - Number of Predictors:      2451
+  - Number of Gradients:       2549
+  - Predictivity (tau):        0.05
+  - Agent velocity:            1
+  - Range (tau*velocity):      0.05
+  - Agent consumption rate:    1
+  - Solution iterations:       25
+
+Integration and Discretization:
+  - Field points:              50
+  - Stability (<1 is good):    0.05
+  - Time step:                 0.001
+  - Iterations:                1000
+  - Time integration delay:    0.005
+  - Time integration points:   200
+  - Average points per int.:   10
+
+Consumption:
+  - Ave pred. CF:              0.919558
+  - Ave grad. CF:              0.949931
+  - Max pred. CF:              0.941495
+  - Max grad. CF:              0.957973
+  - Initial pred. CF:          0.941495
+  - Initial grad. CF:          0.93378
+  - Pred. CF diff (% diff):    -0.021937 ( -2.33002% )
+  - Grad. CF diff (% diff):    0.0161516 ( 1.7297% ) 
+
+Data collection:
+  - Record Delay (fps):         0.0666667 ( 15 )
+  - Number of L2 path samples:  5000
+  - Animated Predictors:        0
+  - Animated Gradient agents:   0
