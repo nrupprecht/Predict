@@ -7,13 +7,12 @@ ICSTD = -std=c++14
 # Optimization for gcc and intel
 ICCOPTFLAGS = -xHost -O3 -no-prec-div -static -restrict -funroll-loops -no-inline-max-size
 GCCOPTFLAGS = -O3 -static -funroll-loops -ffast-math -ffinite-math-only -freciprocal-math -ftree-vectorize -flto
-# -fp-model fast=2
 
 # Compilation for gcc or intel
 ICOMP = $(ICC) $(ICSTD) -g $(ICCOPTFLAGS)
 GCOMP = $(GCC) $(GCSTD) -g $(GCCOPTFLAGS)
 
-# -- Choose whether to use gcc or intel --
+# -- CHOOSE COMPILER: choose whether to use gcc or intel --
 # -- For intel,
 #	CC   = $(ICC)
 #   	COMP = $(ICOMP)

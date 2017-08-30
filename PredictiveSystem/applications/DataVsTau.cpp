@@ -24,6 +24,8 @@ int main(int argc, char** argv) {
   int divisions = 20;  // Number of divisions
   string writeDirectory = "DataVsTau"; // Base name of the directory to write data to
   bool print = false;  // Whether to print any output
+  bool noiseResource = false; // Use a smooth noise resource
+  string tag = "";     // A tag
   
   // Seed random
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -45,6 +47,8 @@ int main(int argc, char** argv) {
   parser.get("divisions", divisions);
   parser.get("writeDirectory", writeDirectory);
   parser.get("print", print);
+  parser.get("noiseResource", noiseResource);
+  parser.get("tag", tag);
   // Make sure we didn't enter any illegal tokens (ones not listed above) on the command line
   try {
     parser.check();
@@ -58,9 +62,13 @@ int main(int argc, char** argv) {
   int LMax = 100000;
   if (label==-1) label = static_cast<int>(drand48()*LMax);
   
+  // Add a tag to the save directory name
+  if (tag!="") writeDirectory += ("_"+tag);
+
   // Create objects, set properties
   DataRecord data(argc, argv);
   System predictive(data);
+  if (noiseResource) predictive.setResource(NOISE);
   // Set the number of predictive and gradient agents
   int nPred = static_cast<int>(fraction*total), nGrad = total-nPred;
   predictive.setNPred(nPred);

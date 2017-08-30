@@ -2,7 +2,7 @@
 #include "System.hpp"
 
 namespace Predictive {
-  DataRecord::DataRecord(int argc, char** argv) : npPaths(10), ngPaths(10), recTimer(0), recDelay(1./15.), recPositions(true), recResource(true), totalResource(0), nPathSamples(0) {
+  DataRecord::DataRecord(int argc, char** argv) : npPaths(10), ngPaths(10), recTimer(0), recDelay(1./15.), recPositions(true), recResource(true), totalResource(0), nPathSamples(5000) {
     for (int i=1; i<argc; ++i)
       command.push_back(argv[i]);
     // Set the timers to have the current time
@@ -327,9 +327,6 @@ namespace Predictive {
   RealType DataRecord::getAveL2() {
     RealType ave = 0;
     int size = 0;
-
-    cout << pathSamples.size() << endl;
-
     for (int i=0; i<pathSamples.size(); ++i) {
       RealType l2 = getAveL2(i);
       if (l2>=0) {

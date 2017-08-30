@@ -15,6 +15,8 @@ int main(int argc, char** argv) {
   RealType tau = 0.05; // What predictivity pred agents will have
   RealType velocity = 1; // What velocity the agents will have
   RealType temperature = 0; // Temperature
+  RealType minP = 0.01;// Minimum portion predictive
+  RealType maxP = 0.5; // Maximum portion predictive
   int label = 1;       // Label which program instance this is
   int expected = 1;    // How many files will be in this batch
   int total = 5000;    // Total number of agents we will use
@@ -22,7 +24,9 @@ int main(int argc, char** argv) {
   int divisions = 20;  // Number of divisions
   string writeDirectory = "DataVsNP"; // Base name of the directory to write data to
   bool print = false;  // Whether to print any output
-  
+  bool noiseResource = false; // Use a smooth noise resource
+  string tag = "";     // A tag
+
   // Seed random
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   srand48( seed );
@@ -34,6 +38,8 @@ int main(int argc, char** argv) {
   parser.get("tau", tau);
   parser.get("velocity", velocity);
   parser.get("temperature", temperature);
+  parser.get("min", minP);
+  parser.get("max", maxP);
   parser.get("label", label);
   parser.get("expected", expected);
   parser.get("total", total);
@@ -41,6 +47,8 @@ int main(int argc, char** argv) {
   parser.get("divisions", divisions);
   parser.get("writeDirectory", writeDirectory);
   parser.get("print", print);
+  parser.get("noiseResource", noiseResource);
+  parser.get("tag", tag);
   // Make sure we didn't enter any illegal tokens (ones not listed above) on the command line
   try {
     parser.check();
@@ -53,10 +61,14 @@ int main(int argc, char** argv) {
   // Random label
   int LMax = 100000;
   if (label==-1) label = static_cast<int>(drand48()*LMax);
+
+  // Add a tag to the save directory name
+  if (tag!="") writeDirectory += ("_"+tag);
   
   // Create objects, set properties
   DataRecord data(argc, argv);
   System predictive(data);
+  if (noiseResource) predictive.setResource(NOISE);
   predictive.setSIters(sIters);
   predictive.setTau(tau);
   predictive.setVelocity(velocity);
@@ -66,14 +78,13 @@ int main(int argc, char** argv) {
   typedef pair<int, RealType> cpair;
   vector<cpair> pCF, gCF, pDiff, gDiff, pDiffFactor, gDiffFactor, L2pathDiff, fieldDiff;
   // Do runs
-  RealType minPortion = 0.01, maxPortion = 0.5;
-  RealType slope = (maxPortion-minPortion)/static_cast<RealType>(divisions);
+  RealType slope = (maxP-minP)/static_cast<RealType>(divisions);
   // Print opening message
   if (print) cout << "Starting runs ...\n";
   auto start = high_resolution_clock::now();
   for (int i=0; i<divisions; ++i) {
     // Get number of agents
-    int nPred = (minPortion + i*slope)*total;
+    int nPred = (minP + i*slope)*total;
     int nGrad = total - nPred;
     if (print) cout << "Running with nPred=" << nPred << " (" << i+1 << " of " << divisions << ") ... ";
     auto start_time = high_resolution_clock::now();
